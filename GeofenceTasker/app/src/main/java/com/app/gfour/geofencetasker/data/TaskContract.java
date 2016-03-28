@@ -6,14 +6,21 @@ import android.provider.BaseColumns;
  * Defines the database schema for tasks.
  */
 public final class TaskContract {
-    public static final String DB_NAME = "com.example.TodoList.db.tasks";
-    public static final int DB_VERSION = 1;
-    public static final String TABLE = "tasks";
 
+    /**
+     * To prevent someone from accidentally instantiating the contract class, give it an empty
+     * constructor.
+     */
+    private TaskContract() {}
 
-    public class Columns {
-        public static final String TASK = "task";
-        public static final String ID = BaseColumns._ID;
+    /**
+     * Inner class that defines the table contents.
+     */
+    public static abstract class TaskEntry implements BaseColumns {
+        public static final String TABLE_NAME = "TASKS";
+        public static final String COLUMN_NAME_ID = "id";
+        public static final String COLUMN_NAME_TITLE = "title";
+        public static final String COLUMN_NAME_LAT = "latitude";
+        public static final String COLUMN_NAME_LONG = "longitude";
     }
-
 }
