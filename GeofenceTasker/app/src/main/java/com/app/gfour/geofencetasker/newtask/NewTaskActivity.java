@@ -9,12 +9,15 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import com.app.gfour.geofencetasker.R;
+import com.app.gfour.geofencetasker.data.Task;
+import com.app.gfour.geofencetasker.data.TaskHelper;
 import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.places.Place;
-import com.google.android.gms.location.places.ui.PlaceAutocompleteFragment;
 import com.google.android.gms.location.places.ui.PlaceSelectionListener;
 import com.google.android.gms.location.places.ui.SupportPlaceAutocompleteFragment;
 import com.google.android.gms.maps.model.LatLng;
+
+import java.util.List;
 
 /**
  * Shows the UI for creating a new task.
@@ -24,14 +27,14 @@ import com.google.android.gms.maps.model.LatLng;
 public class NewTaskActivity extends AppCompatActivity {
 
     private EditText mTitle;
-    private EditText mDescription;
-    private EditText mLocation;
     private Button mDoneButton;
+    private SupportPlaceAutocompleteFragment mSupportPlaceFragment;
+    private TaskHelper mTaskHelper;
 
     /**
      * Store location here after the user selects it from gmap.
      */
-    private LatLng mSelectedLocation;
+    private String mSelectedAddress;
     private String TAG = "NewTaskActivity";
 
     @Override
@@ -39,36 +42,40 @@ public class NewTaskActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_new_task);
 
+        // Initialise database
+        mTaskHelper = new TaskHelper(this);
+
+        // Initialise UI components
         mTitle = (EditText) findViewById(R.id.new_task_title);
-        mDescription = (EditText) findViewById(R.id.new_task_description);
-        //mLocation = (EditText) findViewById(R.id.new_task_location);
         mDoneButton = (Button) findViewById(R.id.new_tast_done_button);
 
+        // Place picker fragment
+        mSupportPlaceFragment = (SupportPlaceAutocompleteFragment)
+                getSupportFragmentManager().findFragmentById(R.id.place_autocomplete_fragment);
+
+
+        // Add listeners
         mDoneButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 // TODO: Save title, description and location (latlong probs) in storage.
-                if (mSelectedLocation == null) {
+                if (mSelectedAddress == null) {
                     Toast.makeText(getBaseContext(), "Please select a location.", Toast.LENGTH_LONG).show();
                 } else if (mTitle.getText() == null || mTitle.getText().equals("")) {
                     Toast.makeText(getBaseContext(), "Please give your task a title.", Toast.LENGTH_LONG).show();
                 } else {
-                    // TODO: Save details in SQLiteDB. LatLng to be stored as (double lat, double lon).
+                    mTaskHelper.addTask(new Task(mTitle.getText().toString(), mSelectedAddress));
                 }
 
             }
         });
 
-        // Place picker fragment
-        final SupportPlaceAutocompleteFragment autocompleteFragment = (SupportPlaceAutocompleteFragment)
-                getSupportFragmentManager().findFragmentById(R.id.place_autocomplete_fragment);
-
-        autocompleteFragment.setOnPlaceSelectedListener(new PlaceSelectionListener() {
+        mSupportPlaceFragment.setOnPlaceSelectedListener(new PlaceSelectionListener() {
             @Override
             public void onPlaceSelected(Place place) {
                 Log.i(TAG, "Place: " + place.getName());
-                mSelectedLocation = place.getLatLng();
-                autocompleteFragment.setText(place.getAddress());
+                mSelectedAddress = place.getAddress().toString();
+                mSupportPlaceFragment.setText(place.getAddress());
             }
 
             @Override
@@ -79,5 +86,6 @@ public class NewTaskActivity extends AppCompatActivity {
                         .show();
             }
         });
+
     }
 }
