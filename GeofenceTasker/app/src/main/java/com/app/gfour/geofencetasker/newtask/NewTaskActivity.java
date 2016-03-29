@@ -40,7 +40,7 @@ public class NewTaskActivity extends AppCompatActivity {
         setContentView(R.layout.activity_new_task);
 
         mTitle = (EditText) findViewById(R.id.new_task_title);
-        mDescription = (EditText) findViewById(R.id.new_task_description);
+        //mDescription = (EditText) findViewById(R.id.new_task_description);
         //mLocation = (EditText) findViewById(R.id.new_task_location);
         mDoneButton = (Button) findViewById(R.id.new_tast_done_button);
 
