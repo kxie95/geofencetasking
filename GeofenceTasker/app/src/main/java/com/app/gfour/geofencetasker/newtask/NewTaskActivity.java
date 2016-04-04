@@ -1,5 +1,6 @@
 package com.app.gfour.geofencetasker.newtask;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -11,6 +12,7 @@ import android.widget.Toast;
 import com.app.gfour.geofencetasker.R;
 import com.app.gfour.geofencetasker.data.Task;
 import com.app.gfour.geofencetasker.data.TaskHelper;
+import com.app.gfour.geofencetasker.tasks.TasksActivity;
 import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.places.Place;
 import com.google.android.gms.location.places.ui.PlaceSelectionListener;
@@ -60,9 +62,21 @@ public class NewTaskActivity extends AppCompatActivity {
                 } else if (mTitle.getText() == null || mTitle.getText().equals("")) {
                     Toast.makeText(getBaseContext(), "Please give your task a title.", Toast.LENGTH_LONG).show();
                 } else {
-                    mTaskHelper.addTask(new Task(mTitle.getText().toString(), mSelectedAddress));
-                }
+                    Task task = new Task(mTitle.getText().toString(), mSelectedAddress);
 
+                    mTaskHelper.addTask(task);
+
+                    //Return back to the main task list activity.
+                    Intent intent = new Intent(NewTaskActivity.this, TasksActivity.class);
+
+                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+
+                    //Set arguments.
+                    intent.putExtra("title", task.getTitle());
+                    intent.putExtra("address", task.getAddress());
+
+                    startActivity(intent);
+                }
             }
         });
 

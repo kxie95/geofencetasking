@@ -9,11 +9,27 @@ import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.EditText;
+import android.widget.ListView;
 
 import com.app.gfour.geofencetasker.R;
+import com.app.gfour.geofencetasker.data.Task;
+import com.app.gfour.geofencetasker.data.TaskHelper;
 import com.app.gfour.geofencetasker.newtask.NewTaskActivity;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
 public class TasksActivity extends AppCompatActivity {
+    private ArrayList<String> items;
+    private ArrayAdapter<String> itemsAdapter;
+    private ListView lvItems;
+
+    private TaskHelper taskHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -29,6 +45,21 @@ public class TasksActivity extends AppCompatActivity {
                 startActivity(new Intent(TasksActivity.this, NewTaskActivity.class));
             }
         });
+
+        taskHelper = new TaskHelper(this);
+
+        lvItems = (ListView) findViewById(R.id.lvItems);
+        items = new ArrayList<String>();
+
+        for (Task task : taskHelper.getAllTasks()){
+            items.add(task.getTitle() + "\n" + task.getAddress());
+        }
+
+        itemsAdapter = new ArrayAdapter<String>(this,
+                android.R.layout.simple_list_item_1, items);
+        lvItems.setAdapter(itemsAdapter);
+
+        //setupListViewListener();
     }
 
     @Override
@@ -52,4 +83,24 @@ public class TasksActivity extends AppCompatActivity {
 
         return super.onOptionsItemSelected(item);
     }
+//
+//    // Attaches a long click listener to the listview
+//    private void setupListViewListener() {
+//        lvItems.setOnItemLongClickListener(
+//                new AdapterView.OnItemLongClickListener() {
+//                    @Override
+//                    public boolean onItemLongClick(AdapterView<?> adapter,
+//                                                   View item, int pos, long id) {
+//                        // Remove the item within array at position
+//                        items.remove(pos);
+//                        // Refresh the adapter
+//                        itemsAdapter.notifyDataSetChanged();
+//
+//                        writeItems();
+//                        // Return true consumes the long click event (marks it handled)
+//                        return true;
+//                    }
+//
+//                });
+//    }
 }
