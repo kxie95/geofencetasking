@@ -3,15 +3,12 @@ package com.app.gfour.geofencetasker.tasks;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.AdapterView;
+import android.view.View;
 import android.widget.ArrayAdapter;
-import android.widget.EditText;
 import android.widget.ListView;
 
 import com.app.gfour.geofencetasker.R;
@@ -19,10 +16,7 @@ import com.app.gfour.geofencetasker.data.Task;
 import com.app.gfour.geofencetasker.data.TaskHelper;
 import com.app.gfour.geofencetasker.newtask.NewTaskActivity;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.List;
 
 public class TasksActivity extends AppCompatActivity {
     private ArrayList<String> items;
@@ -83,24 +77,4 @@ public class TasksActivity extends AppCompatActivity {
 
         return super.onOptionsItemSelected(item);
     }
-//
-//    // Attaches a long click listener to the listview
-//    private void setupListViewListener() {
-//        lvItems.setOnItemLongClickListener(
-//                new AdapterView.OnItemLongClickListener() {
-//                    @Override
-//                    public boolean onItemLongClick(AdapterView<?> adapter,
-//                                                   View item, int pos, long id) {
-//                        // Remove the item within array at position
-//                        items.remove(pos);
-//                        // Refresh the adapter
-//                        itemsAdapter.notifyDataSetChanged();
-//
-//                        writeItems();
-//                        // Return true consumes the long click event (marks it handled)
-//                        return true;
-//                    }
-//
-//                });
-//    }
 }
