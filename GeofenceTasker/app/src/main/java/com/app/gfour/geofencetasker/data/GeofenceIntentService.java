@@ -61,9 +61,8 @@ public class GeofenceIntentService extends IntentService {
             List<Geofence> triggeredGeofences = geofencingEvent.getTriggeringGeofences();
 
             // Get the transition details as a string.
-            String transitionDetails = getTransitionDetailsAsString(
-                    this, geofenceTransition, triggeredGeofences
-            );
+            String transitionDetails = getTransitionDetailsAsString(geofenceTransition,
+                    triggeredGeofences);
             
             // Send notification and log the transition details.
             sendNotification(transitionDetails);
@@ -112,7 +111,6 @@ public class GeofenceIntentService extends IntentService {
 
 
     private String getTransitionDetailsAsString(
-            Context context,
             int geofenceTransition,
             List<Geofence> triggeredGeofences) {
         String transitionString = getTransitionString(geofenceTransition);
@@ -123,6 +121,9 @@ public class GeofenceIntentService extends IntentService {
             triggeredGeofencesIdList.add(geofence.getRequestId());
         }
 
+        // TODO: Pull ids from database.
+        // Get database singleton from Application class.
+        
         String triggeringGeofencesIdsString = TextUtils.join(", ", triggeredGeofencesIdList);
 
         return transitionString + ": " + triggeringGeofencesIdsString;
