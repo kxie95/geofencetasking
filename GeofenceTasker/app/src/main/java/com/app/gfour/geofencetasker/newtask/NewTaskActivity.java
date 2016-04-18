@@ -10,10 +10,16 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import com.app.gfour.geofencetasker.R;
+import com.app.gfour.geofencetasker.data.GeofenceCreationService;
 import com.app.gfour.geofencetasker.data.Task;
 import com.app.gfour.geofencetasker.data.TaskHelper;
 import com.app.gfour.geofencetasker.tasks.TasksActivity;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.GoogleApiClient.ConnectionCallbacks;
+import com.google.android.gms.common.api.GoogleApiClient.OnConnectionFailedListener;
 import com.google.android.gms.common.api.Status;
+import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.places.Place;
 import com.google.android.gms.location.places.ui.PlaceSelectionListener;
 import com.google.android.gms.location.places.ui.SupportPlaceAutocompleteFragment;
@@ -28,12 +34,15 @@ public class NewTaskActivity extends AppCompatActivity {
     private Button mDoneButton;
     private SupportPlaceAutocompleteFragment mSupportPlaceFragment;
     private TaskHelper mTaskHelper;
+    private GeofenceCreationService mGeofenceCreationService;
 
     /**
      * Store location here after the user selects it from gmap.
      */
     private String mSelectedAddress;
     private String TAG = "NewTaskActivity";
+
+    private Place mSelectedPlace;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,6 +60,8 @@ public class NewTaskActivity extends AppCompatActivity {
         mSupportPlaceFragment = (SupportPlaceAutocompleteFragment)
                 getSupportFragmentManager().findFragmentById(R.id.place_autocomplete_fragment);
 
+        // Create GeofenceCreationService
+        mGeofenceCreationService = new GeofenceCreationService();
 
         // Add listeners
         mDoneButton.setOnClickListener(new View.OnClickListener() {
@@ -65,6 +76,16 @@ public class NewTaskActivity extends AppCompatActivity {
                     Task task = new Task(mTitle.getText().toString(), mSelectedAddress);
 
                     mTaskHelper.addTask(task);
+
+                    // Start intent service for creating task's geofence.
+                    if (mSelectedPlace != null) {
+                        Intent serviceIntent = new Intent(NewTaskActivity.this, GeofenceCreationService.class);
+                        serviceIntent.putExtra("title", task.getTitle());
+                        serviceIntent.putExtra("address", task.getAddress());
+                        serviceIntent.putExtra("latitude", mSelectedPlace.getLatLng().latitude);
+                        serviceIntent.putExtra("longitude", mSelectedPlace.getLatLng().longitude);
+                        startService(serviceIntent);
+                    }
 
                     //Return back to the main task list activity.
                     Intent intent = new Intent(NewTaskActivity.this, TasksActivity.class);
@@ -84,6 +105,7 @@ public class NewTaskActivity extends AppCompatActivity {
             @Override
             public void onPlaceSelected(Place place) {
                 Log.i(TAG, "Place: " + place.getName());
+                mSelectedPlace = place;
                 mSelectedAddress = place.getAddress().toString();
                 mSupportPlaceFragment.setText(place.getAddress());
             }
@@ -96,6 +118,6 @@ public class NewTaskActivity extends AppCompatActivity {
                         .show();
             }
         });
-
     }
 }
+
