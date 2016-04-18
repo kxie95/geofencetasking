@@ -12,7 +12,6 @@ import android.os.IBinder;
 import android.support.v4.app.TaskStackBuilder;
 import android.support.v7.app.NotificationCompat;
 import android.util.Log;
-
 import com.app.gfour.geofencetasker.R;
 import com.app.gfour.geofencetasker.tasks.TasksActivity;
 import com.google.android.gms.maps.model.LatLng;
@@ -24,6 +23,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * Class which detects if the user has obtained achievements related to tasks.
+ * Achievements include tasks completed in certain continents and the number of tasks done in one
+ * day. Credits to http://developer.android.com/guide/topics/ui/notifiers/notifications.html.
+ */
 public class AchievementService extends Service {
 
     // Stores all the continents and their respective lat/longs

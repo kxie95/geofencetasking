@@ -129,13 +129,14 @@ public class GeofenceIntentService extends IntentService {
         for (Geofence geofence : triggeredGeofences) {
             // Get the corresponding task in the database.
             Task task = mTaskHelper.getTaskById(Integer.parseInt(geofence.getRequestId()));
-            // Get the title of the task and add it to the list.
-            triggeredGeofencesTaskList.add(task.getTitle());
+
+            if (task != null && task.getTitle() != null && !task.getTitle().equals("")) {
+                // Get the title of the task and add it to the list.
+                triggeredGeofencesTaskList.add(task.getTitle());
+            }
         }
 
-        String triggeringGeofencesTaskNames = TextUtils.join(", ", triggeredGeofencesTaskList);
-
-        return transitionString + ": " + triggeringGeofencesTaskNames;
+        return TextUtils.join(", ", triggeredGeofencesTaskList);
     }
 
     /**
