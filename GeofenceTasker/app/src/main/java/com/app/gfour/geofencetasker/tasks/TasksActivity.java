@@ -15,6 +15,7 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
 import com.app.gfour.geofencetasker.R;
+import com.app.gfour.geofencetasker.data.AchievementService;
 import com.app.gfour.geofencetasker.data.Task;
 import com.app.gfour.geofencetasker.data.TaskHelper;
 import com.app.gfour.geofencetasker.newtask.NewTaskActivity;
@@ -69,14 +70,27 @@ public class TasksActivity extends AppCompatActivity {
 
     @Override
     public boolean onContextItemSelected(MenuItem item) {
+
         AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
+        String taskItem = itemsAdapter.getItem(info.position);
+        String[] taskFields = taskItem.split("\n");
+        int id = taskHelper.getIdByFields(taskFields[0], taskFields[1]);
+
         switch (item.getItemId()) {
+
             case R.id.deleteItem:
-                String taskItem = itemsAdapter.getItem(info.position);
+                // Remove the task from the database.
+                taskHelper.deleteTask(id);
+                // Remove the task from the listView.
+                itemsAdapter.remove(taskItem);
+                return true;
+
+            case R.id.completeItem:
+                Intent intent = new Intent(this, AchievementService.class);
+                intent.putExtra("Address", taskFields[1]);
+                startService(intent);
 
                 // Remove the task from the database.
-                String[] taskFields = taskItem.split("\n");
-                int id = taskHelper.getIdByFields(taskFields[0], taskFields[1]);
                 taskHelper.deleteTask(id);
 
                 // Remove the task from the listView.

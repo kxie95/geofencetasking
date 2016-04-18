@@ -5,4 +5,5 @@
     <string name="geofence_transition_exited">exited</string>
     <string name="unknown_geofence_transition">unknown</string>
     <string name="text_remove_task">Remove task</string>
+    <string name="text_complete_task">Complete task</string>
 </resources>
