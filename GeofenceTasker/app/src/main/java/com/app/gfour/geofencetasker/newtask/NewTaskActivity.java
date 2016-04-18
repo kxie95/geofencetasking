@@ -175,7 +175,7 @@ public class NewTaskActivity extends AppCompatActivity
 
             startActivity(intent);
         } else {
-            Log.e(TAG, "Something went wrong. Geofence not created.");
+            Log.e(TAG, "ERROR: Geofence not created. (Status Code:" + status.getStatusCode() + ")");
         }
     }
 
@@ -187,7 +187,7 @@ public class NewTaskActivity extends AppCompatActivity
                 .setCircularRegion(
                         latitude,
                         longitude,
-                        500
+                        100
                 )
                 .setExpirationDuration(86400000)
                 .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER |
@@ -211,8 +211,6 @@ public class NewTaskActivity extends AppCompatActivity
             return mGeofencePendingIntent;
         }
         Intent intent = new Intent(this, GeofenceIntentService.class);
-        // We use FLAG_UPDATE_CURRENT so that we get the same pending intent back when calling
-        // addGeofences() and removeGeofences().
         return PendingIntent.getService(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
     }
 
