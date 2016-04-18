@@ -120,7 +120,7 @@ public class GeofenceCreationService extends IntentService
                     .setCircularRegion(
                             latitude,
                             longitude,
-                            10
+                            100
                     )
                     .setExpirationDuration(86400000)
                     .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER |
