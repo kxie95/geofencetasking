@@ -5,7 +5,6 @@ import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -18,9 +17,6 @@ import com.app.gfour.geofencetasker.R;
 import com.app.gfour.geofencetasker.data.Task;
 import com.app.gfour.geofencetasker.data.TaskHelper;
 import com.app.gfour.geofencetasker.newtask.NewTaskActivity;
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.location.LocationServices;
 
 import java.util.ArrayList;
 

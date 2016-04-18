@@ -11,7 +11,6 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import com.app.gfour.geofencetasker.R;
-import com.app.gfour.geofencetasker.data.GeofenceCreationService;
 import com.app.gfour.geofencetasker.data.GeofenceIntentService;
 import com.app.gfour.geofencetasker.data.Task;
 import com.app.gfour.geofencetasker.data.TaskHelper;
@@ -20,8 +19,8 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.GoogleApiClient.ConnectionCallbacks;
 import com.google.android.gms.common.api.GoogleApiClient.OnConnectionFailedListener;
-import com.google.android.gms.common.api.Status;
 import com.google.android.gms.common.api.ResultCallback;
+import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.Geofence;
 import com.google.android.gms.location.GeofencingRequest;
 import com.google.android.gms.location.LocationServices;
@@ -77,10 +76,9 @@ public class NewTaskActivity extends AppCompatActivity
         mDoneButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // TODO: Save title, description and location (latlong probs) in storage.
                 if (mSelectedAddress == null) {
                     Toast.makeText(getBaseContext(), "Please select a location.", Toast.LENGTH_LONG).show();
-                } else if (mTitle.getText() == null || mTitle.getText().equals("")) {
+                } else if (mTitle.getText() == null || mTitle.getText().toString().equals("")) {
                     Toast.makeText(getBaseContext(), "Please give your task a title.", Toast.LENGTH_LONG).show();
                 } else {
                     Task task = new Task(mTitle.getText().toString(), mSelectedAddress);
@@ -93,17 +91,6 @@ public class NewTaskActivity extends AppCompatActivity
                         addToGeofenceList(id, mSelectedPlace.getLatLng().latitude, mSelectedPlace.getLatLng().longitude);
                         createGeofence();
                     }
-
-                    //Return back to the main task list activity.
-                    Intent intent = new Intent(NewTaskActivity.this, TasksActivity.class);
-
-                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-
-                    //Set arguments.
-                    intent.putExtra("title", task.getTitle());
-                    intent.putExtra("address", task.getAddress());
-
-                    startActivity(intent);
                 }
             }
         });
@@ -173,8 +160,19 @@ public class NewTaskActivity extends AppCompatActivity
 
     @Override
     public void onResult(Status status) {
+        Log.i(TAG, status.getStatusMessage() + " " + status.getStatusCode());
         if (status.isSuccess()) {
             Log.i(TAG, "Geofence created for new task.");
+            //Return back to the main task list activity.
+            Intent intent = new Intent(NewTaskActivity.this, TasksActivity.class);
+
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+
+            //Set arguments.
+            intent.putExtra("title", mTitle.getText().toString());
+            intent.putExtra("address", mSelectedAddress);
+
+            startActivity(intent);
         } else {
             Log.e(TAG, "Something went wrong. Geofence not created.");
         }
