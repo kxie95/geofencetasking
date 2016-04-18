@@ -3,6 +3,7 @@ package com.app.gfour.geofencetasker.newtask;
 import android.app.PendingIntent;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
@@ -11,7 +12,6 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import com.app.gfour.geofencetasker.R;
-import com.app.gfour.geofencetasker.data.GeofenceCreationService;
 import com.app.gfour.geofencetasker.data.GeofenceIntentService;
 import com.app.gfour.geofencetasker.data.Task;
 import com.app.gfour.geofencetasker.data.TaskHelper;
@@ -160,7 +160,7 @@ public class NewTaskActivity extends AppCompatActivity
     }
 
     @Override
-    public void onConnectionFailed(ConnectionResult result) {
+    public void onConnectionFailed(@NonNull ConnectionResult result) {
         Log.i(TAG, "Connection failed: ConnectionResult.getErrorCode() = " + result.getErrorCode());
     }
 
@@ -172,7 +172,7 @@ public class NewTaskActivity extends AppCompatActivity
     }
 
     @Override
-    public void onResult(Status status) {
+    public void onResult(@NonNull Status status) {
         if (status.isSuccess()) {
             Log.i(TAG, "Geofence created for new task.");
         } else {

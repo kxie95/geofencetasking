@@ -1,25 +1,33 @@
 package com.app.gfour.geofencetasker.data;
 
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.location.Address;
 import android.location.Geocoder;
 import android.os.IBinder;
-import android.preference.PreferenceManager;
-import android.text.Editable;
-import android.util.Log;
+import android.support.v4.app.TaskStackBuilder;
+import android.support.v7.app.NotificationCompat;
 
+import com.app.gfour.geofencetasker.R;
+import com.app.gfour.geofencetasker.tasks.TasksActivity;
 import com.google.android.gms.maps.model.LatLng;
 
 import java.util.Calendar;
-import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * Class which detects if the user has obtained achievements related to tasks.
+ * Achievements include tasks completed in certain continents and the number of tasks done in one
+ * day. Credits to http://developer.android.com/guide/topics/ui/notifiers/notifications.html.
+ */
 public class AchievementService extends Service {
 
     // Stores all the continents and their respective lat/longs
@@ -41,12 +49,12 @@ public class AchievementService extends Service {
     public void onCreate() {
         prefs = getSharedPreferences("AchievementPreferences", MODE_PRIVATE);
 
-        MajorContinents.put("Australia", new LatLng(25.27, 133.77));
+        MajorContinents.put("Australasia", new LatLng(25.27, 133.77));
         MajorContinents.put("Asia", new LatLng(34.04, 100.62));
         MajorContinents.put("Africa", new LatLng(8.78, 37.50));
         MajorContinents.put("Europe", new LatLng(54.52, 15.25));
         MajorContinents.put("America", new LatLng(37.09, 95.71));
-        MajorContinents.put("NewZealand", new LatLng(40.90, 174.88));
+        MajorContinents.put("Antarctica", new LatLng(-78.65, 32.32));
     }
 
     public AchievementService() {
@@ -84,7 +92,7 @@ public class AchievementService extends Service {
     public void checkForLocationCount() {
 
         String closestDestination = "The Matrix";
-        double closestDistance = 100000;
+        double closestDistance = Double.MAX_VALUE;
 
         Set<String> dictionaryKeys = MajorContinents.keySet();
 
@@ -98,17 +106,15 @@ public class AchievementService extends Service {
             }
         }
 
-
         int continentTaskCount = prefs.getInt(closestDestination, 0);
         continentTaskCount++;
 
         SharedPreferences.Editor e = prefs.edit();
-        e.putInt(closestDestination, continentTaskCount).commit();
+        e.putInt(closestDestination, continentTaskCount).apply();
 
-        if(continentTaskCount % 10 == 0){
-            //TODO: KAREN SPAM THEM WITH THIS NOTIFICATION
-            String destinationAchievement = "WELL DONE! " + Integer.toString(continentTaskCount) + "Tasks done in " + closestDestination + "!";
-            Log.i(TAG, "ACHIEVEMENT: " + destinationAchievement);
+        if(continentTaskCount % 2 == 0){
+            sendNotification("ACHIEVEMENT", "Well done! " + Integer.toString(continentTaskCount)
+                    + " Tasks done in " + closestDestination + "!");
         }
     }
 
@@ -150,21 +156,56 @@ public class AchievementService extends Service {
 
         // Iterate through first, second and third day
         if (firstTask == 0) {
-            e.putInt("firstTask", seconds).commit();
+            e.putInt("firstTask", seconds).apply();
         } else if (secondTask == 0) {
-            e.putInt("secondTask", seconds).commit();
+            e.putInt("secondTask", seconds).apply();
         } else if (thirdTask == 0) {
-            e.putInt("thirdTask", seconds).commit();
+            e.putInt("thirdTask", seconds).apply();
         } else {
             if (seconds - firstTask <= secondsInADay) {
-                //TODO: KAREN SPAM THEM WITH THIS NOTIFICATION
-                String threeInADayAchievement = "WELL DONE! THREE IN A DAY!";
-                Log.i(TAG, "ACHIEVEMENT: " + threeInADayAchievement);
+                sendNotification("ACHIEVEMENT", "Well done! Three in a day!");
             }
             // Shuffles tasks around, so the three latest completed tasks are kept up to date
-            e.putInt("firstTask", secondTask).commit();
-            e.putInt("secondTask", thirdTask).commit();
-            e.putInt("thirdTask", seconds).commit();
+            e.putInt("firstTask", secondTask).apply();
+            e.putInt("secondTask", thirdTask).apply();
+            e.putInt("thirdTask", seconds).apply();
         }
+    }
+
+    private void sendNotification(String title, String details) {
+        // Create an explicit content Intent that starts the main Activity.
+        Intent notificationIntent = new Intent(getApplicationContext(), TasksActivity.class);
+
+        // Construct a task stack.
+        TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
+
+        // Add the main Activity to the task stack as the parent.
+        stackBuilder.addParentStack(TasksActivity.class);
+
+        // Push the content Intent onto the stack.
+        stackBuilder.addNextIntent(notificationIntent);
+
+        // Get a PendingIntent containing the entire back stack.
+        PendingIntent notificationPendingIntent =
+                stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        // Get a notification builder that's compatible with platform versions >= 4
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this);
+
+        // Define the notification settings.
+        builder.setSmallIcon(R.drawable.ic_media_play)
+                .setContentTitle(title)
+                .setContentText(details)
+                .setContentIntent(notificationPendingIntent);
+
+        // Dismiss notification once the user touches it.
+        builder.setAutoCancel(true);
+
+        // Get an instance of the Notification manager
+        NotificationManager mNotificationManager =
+                (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+
+        // Issue the notification
+        mNotificationManager.notify(0, builder.build());
     }
 }

@@ -74,14 +74,14 @@ public class GeofenceIntentService extends IntentService {
                     triggeredGeofences);
             
             // Send notification and log the transition details.
-            sendNotification(transitionDetails);
+            sendNotification(getTransitionString(geofenceTransition), transitionDetails);
         } else {
             Log.e(TAG, "GeofenceTransition" + geofenceTransition);
         }
 
     }
 
-    private void sendNotification(String transitionDetails) {
+    private void sendNotification(String transition, String transitionDetails) {
         // Create an explicit content Intent that starts the main Activity.
         Intent notificationIntent = new Intent(getApplicationContext(), TasksActivity.class);
 
@@ -103,8 +103,8 @@ public class GeofenceIntentService extends IntentService {
 
         // Define the notification settings.
         builder.setSmallIcon(R.drawable.ic_media_play)
-                .setContentTitle(transitionDetails)
-                //.setContentText(getString(R.string.geofence_transition_notification_text))
+                .setContentTitle(transition)
+                .setContentText(transitionDetails)
                 .setContentIntent(notificationPendingIntent);
 
         // Dismiss notification once the user touches it.
@@ -129,13 +129,14 @@ public class GeofenceIntentService extends IntentService {
         for (Geofence geofence : triggeredGeofences) {
             // Get the corresponding task in the database.
             Task task = mTaskHelper.getTaskById(Integer.parseInt(geofence.getRequestId()));
-            // Get the title of the task and add it to the list.
-            triggeredGeofencesTaskList.add(task.getTitle());
+
+            if (task != null && task.getTitle() != null && !task.getTitle().equals("")) {
+                // Get the title of the task and add it to the list.
+                triggeredGeofencesTaskList.add(task.getTitle());
+            }
         }
 
-        String triggeringGeofencesTaskNames = TextUtils.join(", ", triggeredGeofencesTaskList);
-
-        return transitionString + ": " + triggeringGeofencesTaskNames;
+        return TextUtils.join(", ", triggeredGeofencesTaskList);
     }
 
     /**
@@ -147,11 +148,11 @@ public class GeofenceIntentService extends IntentService {
     private String getTransitionString(int transitionType) {
         switch (transitionType) {
             case Geofence.GEOFENCE_TRANSITION_ENTER:
-                return getString(R.string.geofence_transition_entered);
+                return "You have tasks";
             case Geofence.GEOFENCE_TRANSITION_EXIT:
-                return getString(R.string.geofence_transition_exited);
+                return "You have no tasks";
             default:
-                return getString(R.string.unknown_geofence_transition);
+                return "What is happening";
         }
     }
 }
