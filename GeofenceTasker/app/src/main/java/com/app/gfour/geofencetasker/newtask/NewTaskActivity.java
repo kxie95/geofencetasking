@@ -34,9 +34,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Shows the UI for creating a new task.
- * Note: I would normally create a fragment to go with this activity for best practices,
- * but we just wanna hack this thing out.
+ * Activity for creating a new task. Also contains logic for
+ * creating geofence for each task.
+ * Credits to: http://developer.android.com/training/location/geofencing.html
  */
 public class NewTaskActivity extends AppCompatActivity
         implements ConnectionCallbacks, OnConnectionFailedListener, ResultCallback<Status>{
@@ -87,7 +87,7 @@ public class NewTaskActivity extends AppCompatActivity
 
                     mTaskHelper.addTask(task);
 
-                    // Start intent service for creating task's geofence.
+                    // Create geofence for new task.
                     if (mSelectedPlace != null) {
                         int id = mTaskHelper.getIdByFields(task.getTitle(), task.getAddress());
                         addToGeofenceList(id, mSelectedPlace.getLatLng().latitude, mSelectedPlace.getLatLng().longitude);
@@ -155,9 +155,7 @@ public class NewTaskActivity extends AppCompatActivity
 
     @Override
     public void onConnectionSuspended(int cause) {
-        // The connection to Google Play services was lost for some reason.
         Log.i(TAG, "Connection suspended");
-        // onConnected() will be called again automatically when the service reconnects
     }
 
     @Override
@@ -175,11 +173,10 @@ public class NewTaskActivity extends AppCompatActivity
 
             startActivity(intent);
         } else {
-            Log.e(TAG, "Something went wrong. Geofence not created.");
+            Log.e(TAG, "ERROR: Geofence not created. (Status Code:" + status.getStatusCode() + ")");
         }
     }
 
-    // Adds Geofence to List
     private void addToGeofenceList(int geofenceID, double latitude, double longitude) {
         Log.d(TAG, "ID: " + geofenceID + ", Latitude: " + latitude + ", Longitude: " + longitude);
         mGeofenceList.add(new Geofence.Builder()
@@ -187,7 +184,7 @@ public class NewTaskActivity extends AppCompatActivity
                 .setCircularRegion(
                         latitude,
                         longitude,
-                        500
+                        200
                 )
                 .setExpirationDuration(86400000)
                 .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER |
@@ -211,13 +208,10 @@ public class NewTaskActivity extends AppCompatActivity
             return mGeofencePendingIntent;
         }
         Intent intent = new Intent(this, GeofenceIntentService.class);
-        // We use FLAG_UPDATE_CURRENT so that we get the same pending intent back when calling
-        // addGeofences() and removeGeofences().
         return PendingIntent.getService(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
     }
 
     private void createGeofence() {
-
         // Check if client is connected.
         if(!mGoogleApiClient.isConnected()) {
             mGoogleApiClient.connect();
@@ -241,7 +235,7 @@ public class NewTaskActivity extends AppCompatActivity
                 Log.i(TAG, "gps enabled?" + lm.isProviderEnabled(LocationManager.GPS_PROVIDER));
             } catch (SecurityException securityException) {
                 // Catch exception generated if the app does not use ACCESS_FINE_LOCATION permission.
-                // logSecurityException(securityException);
+                Log.e(TAG, "Invalid location permission.", securityException);
             }
         }
     }
