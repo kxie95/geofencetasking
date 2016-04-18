@@ -1,7 +1,9 @@
 package com.app.gfour.geofencetasker.newtask;
 
 import android.app.PendingIntent;
+import android.content.Context;
 import android.content.Intent;
+import android.location.LocationManager;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -160,7 +162,6 @@ public class NewTaskActivity extends AppCompatActivity
 
     @Override
     public void onResult(Status status) {
-        Log.i(TAG, status.getStatusMessage() + " " + status.getStatusCode());
         if (status.isSuccess()) {
             Log.i(TAG, "Geofence created for new task.");
             //Return back to the main task list activity.
@@ -236,6 +237,8 @@ public class NewTaskActivity extends AppCompatActivity
                         // transition is observed.
                         mGeofencePendingIntent
                 ).setResultCallback(this); // Result processed in onResult().
+                LocationManager lm = (LocationManager)this.getSystemService(Context.LOCATION_SERVICE);
+                Log.i(TAG, "gps enabled?" + lm.isProviderEnabled(LocationManager.GPS_PROVIDER));
             } catch (SecurityException securityException) {
                 // Catch exception generated if the app does not use ACCESS_FINE_LOCATION permission.
                 // logSecurityException(securityException);

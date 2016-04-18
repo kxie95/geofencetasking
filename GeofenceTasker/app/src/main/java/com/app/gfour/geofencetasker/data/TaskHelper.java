@@ -42,7 +42,7 @@ public class TaskHelper extends SQLiteOpenHelper {
 
     @Override
 	public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        Log.i("onUpgrade", "droppping table then creating");
+        Log.i("onUpgrade", "dropping table then creating");
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_NAME);
 		onCreate(db);
 	}
