@@ -42,7 +42,7 @@ public class Task {
 
     @Override
     public String toString() {
-        return "Book [id=" + id + ", title=" + title + ", address=" + address
+        return "Task [id=" + id + ", title=" + title + ", address=" + address
                 + "]";
     }
 }

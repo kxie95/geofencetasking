@@ -26,6 +26,13 @@ import java.util.List;
 public class GeofenceIntentService extends IntentService {
 
     private static final String TAG = "GeofenceIntentService";
+    private TaskHelper mTaskHelper;
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        mTaskHelper = new TaskHelper(this);
+    }
 
     /**
      * Mandatory default constructor.
@@ -123,7 +130,8 @@ public class GeofenceIntentService extends IntentService {
 
         // TODO: Pull ids from database.
         // Get database singleton from Application class.
-        
+
+
         String triggeringGeofencesIdsString = TextUtils.join(", ", triggeredGeofencesIdList);
 
         return transitionString + ": " + triggeringGeofencesIdsString;
