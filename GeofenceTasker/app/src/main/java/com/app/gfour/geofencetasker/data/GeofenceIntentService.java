@@ -74,14 +74,14 @@ public class GeofenceIntentService extends IntentService {
                     triggeredGeofences);
             
             // Send notification and log the transition details.
-            sendNotification(transitionDetails);
+            sendNotification(getTransitionString(geofenceTransition), transitionDetails);
         } else {
             Log.e(TAG, "GeofenceTransition" + geofenceTransition);
         }
 
     }
 
-    private void sendNotification(String transitionDetails) {
+    private void sendNotification(String transition, String transitionDetails) {
         // Create an explicit content Intent that starts the main Activity.
         Intent notificationIntent = new Intent(getApplicationContext(), TasksActivity.class);
 
@@ -103,8 +103,8 @@ public class GeofenceIntentService extends IntentService {
 
         // Define the notification settings.
         builder.setSmallIcon(R.drawable.ic_media_play)
-                .setContentTitle(transitionDetails)
-                //.setContentText(getString(R.string.geofence_transition_notification_text))
+                .setContentTitle(transition)
+                .setContentText(transitionDetails)
                 .setContentIntent(notificationPendingIntent);
 
         // Dismiss notification once the user touches it.
