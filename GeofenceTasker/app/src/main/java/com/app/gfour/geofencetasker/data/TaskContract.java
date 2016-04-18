@@ -21,5 +21,7 @@ public final class TaskContract {
         public static final String COLUMN_NAME_ID = "id";
         public static final String COLUMN_NAME_TITLE = "title";
         public static final String COLUMN_NAME_ADDRESS = "address";
+        public static final String[] COLUMNS =
+                {COLUMN_NAME_ID,COLUMN_NAME_TITLE,COLUMN_NAME_ADDRESS};
     }
 }

@@ -107,7 +107,7 @@ public class NewTaskActivity extends AppCompatActivity {
                 Log.i(TAG, "Place: " + place.getName());
                 mSelectedPlace = place;
                 mSelectedAddress = place.getAddress().toString();
-                mSupportPlaceFragment.setText(place.getAddress());
+                mSupportPlaceFragment.setText(mSelectedAddress);
             }
 
             @Override
