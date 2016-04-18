@@ -1,5 +1,6 @@
 package com.app.gfour.geofencetasker.newtask;
 
+import android.app.PendingIntent;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -11,6 +12,7 @@ import android.widget.Toast;
 
 import com.app.gfour.geofencetasker.R;
 import com.app.gfour.geofencetasker.data.GeofenceCreationService;
+import com.app.gfour.geofencetasker.data.GeofenceIntentService;
 import com.app.gfour.geofencetasker.data.Task;
 import com.app.gfour.geofencetasker.data.TaskHelper;
 import com.app.gfour.geofencetasker.tasks.TasksActivity;
@@ -19,21 +21,33 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.GoogleApiClient.ConnectionCallbacks;
 import com.google.android.gms.common.api.GoogleApiClient.OnConnectionFailedListener;
 import com.google.android.gms.common.api.Status;
+import com.google.android.gms.common.api.ResultCallback;
+import com.google.android.gms.location.Geofence;
+import com.google.android.gms.location.GeofencingRequest;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.places.Place;
 import com.google.android.gms.location.places.ui.PlaceSelectionListener;
 import com.google.android.gms.location.places.ui.SupportPlaceAutocompleteFragment;
+
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Shows the UI for creating a new task.
  * Note: I would normally create a fragment to go with this activity for best practices,
  * but we just wanna hack this thing out.
  */
-public class NewTaskActivity extends AppCompatActivity {
+public class NewTaskActivity extends AppCompatActivity
+        implements ConnectionCallbacks, OnConnectionFailedListener, ResultCallback<Status>{
 
     private EditText mTitle;
     private Button mDoneButton;
     private SupportPlaceAutocompleteFragment mSupportPlaceFragment;
     private TaskHelper mTaskHelper;
+
+    private PendingIntent mGeofencePendingIntent;
+    private GoogleApiClient mGoogleApiClient;
+    protected List<Geofence> mGeofenceList;
 
     /**
      * Store location here after the user selects it from gmap.
@@ -63,6 +77,7 @@ public class NewTaskActivity extends AppCompatActivity {
         mDoneButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                // TODO: Save title, description and location (latlong probs) in storage.
                 if (mSelectedAddress == null) {
                     Toast.makeText(getBaseContext(), "Please select a location.", Toast.LENGTH_LONG).show();
                 } else if (mTitle.getText() == null || mTitle.getText().equals("")) {
@@ -74,12 +89,9 @@ public class NewTaskActivity extends AppCompatActivity {
 
                     // Start intent service for creating task's geofence.
                     if (mSelectedPlace != null) {
-                        Intent serviceIntent = new Intent(NewTaskActivity.this, GeofenceCreationService.class);
-                        serviceIntent.putExtra("title", task.getTitle());
-                        serviceIntent.putExtra("address", task.getAddress());
-                        serviceIntent.putExtra("latitude", mSelectedPlace.getLatLng().latitude);
-                        serviceIntent.putExtra("longitude", mSelectedPlace.getLatLng().longitude);
-                        startService(serviceIntent);
+                        int id = mTaskHelper.getIdByFields(task.getTitle(), task.getAddress());
+                        addToGeofenceList(id, mSelectedPlace.getLatLng().latitude, mSelectedPlace.getLatLng().longitude);
+                        createGeofence();
                     }
 
                     //Return back to the main task list activity.
@@ -113,6 +125,124 @@ public class NewTaskActivity extends AppCompatActivity {
                         .show();
             }
         });
+        // Create client.
+        buildGoogleApiClient();
+
+        // Create empty geofence list.
+        mGeofenceList = new ArrayList<Geofence>();
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        mGoogleApiClient.connect();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        mGoogleApiClient.disconnect();
+    }
+
+    protected synchronized void buildGoogleApiClient() {
+        mGoogleApiClient = new GoogleApiClient.Builder(this)
+                .addConnectionCallbacks(this)
+                .addOnConnectionFailedListener(this)
+                .addApi(LocationServices.API)
+                .build();
+    }
+
+    @Override
+    public void onConnected(Bundle connectionHint) {
+        Log.i(TAG, "Connected to GoogleApiClient");
+
+        createGeofence();
+    }
+
+    @Override
+    public void onConnectionFailed(ConnectionResult result) {
+        Log.i(TAG, "Connection failed: ConnectionResult.getErrorCode() = " + result.getErrorCode());
+    }
+
+    @Override
+    public void onConnectionSuspended(int cause) {
+        // The connection to Google Play services was lost for some reason.
+        Log.i(TAG, "Connection suspended");
+        // onConnected() will be called again automatically when the service reconnects
+    }
+
+    @Override
+    public void onResult(Status status) {
+        if (status.isSuccess()) {
+            Log.i(TAG, "Geofence created for new task.");
+        } else {
+            Log.e(TAG, "Something went wrong. Geofence not created.");
+        }
+    }
+
+    // Adds Geofence to List
+    private void addToGeofenceList(int geofenceID, double latitude, double longitude) {
+        Log.d(TAG, "ID: " + geofenceID + ", Latitude: " + latitude + ", Longitude: " + longitude);
+        mGeofenceList.add(new Geofence.Builder()
+                .setRequestId(Integer.toString(geofenceID))
+                .setCircularRegion(
+                        latitude,
+                        longitude,
+                        500
+                )
+                .setExpirationDuration(86400000)
+                .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER |
+                        Geofence.GEOFENCE_TRANSITION_EXIT)
+                .build());
+    }
+
+    private GeofencingRequest getGeofencingRequest() {
+        if (mGeofenceList == null || mGeofenceList.isEmpty()) {
+            return null;
+        }
+        GeofencingRequest.Builder builder = new GeofencingRequest.Builder();
+        builder.setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER);
+        builder.addGeofences(mGeofenceList);
+        return builder.build();
+    }
+
+    private PendingIntent getGeofencePendingIntent() {
+        // Reuse the PendingIntent if we already have it.
+        if (mGeofencePendingIntent != null) {
+            return mGeofencePendingIntent;
+        }
+        Intent intent = new Intent(this, GeofenceIntentService.class);
+        // We use FLAG_UPDATE_CURRENT so that we get the same pending intent back when calling
+        // addGeofences() and removeGeofences().
+        return PendingIntent.getService(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+    }
+
+    private void createGeofence() {
+
+        // Check if client is connected.
+        if(!mGoogleApiClient.isConnected()) {
+            mGoogleApiClient.connect();
+            return;
+        }
+
+        GeofencingRequest geofencingRequest = getGeofencingRequest();
+        PendingIntent mGeofencePendingIntent = getGeofencePendingIntent();
+
+        if (geofencingRequest != null && mGeofencePendingIntent != null) {
+            try {
+                LocationServices.GeofencingApi.addGeofences(
+                        mGoogleApiClient,
+                        // The GeofenceRequest object.
+                        geofencingRequest,
+                        // This pending intent is used to generate an intent when a matched geofence
+                        // transition is observed.
+                        mGeofencePendingIntent
+                ).setResultCallback(this); // Result processed in onResult().
+            } catch (SecurityException securityException) {
+                // Catch exception generated if the app does not use ACCESS_FINE_LOCATION permission.
+                // logSecurityException(securityException);
+            }
+        }
     }
 }
 

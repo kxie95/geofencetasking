@@ -32,6 +32,7 @@ public class GeofenceIntentService extends IntentService {
     public void onCreate() {
         super.onCreate();
         mTaskHelper = new TaskHelper(this);
+        Log.d(TAG, "GeofenceIntentService has been created.");
     }
 
     /**
