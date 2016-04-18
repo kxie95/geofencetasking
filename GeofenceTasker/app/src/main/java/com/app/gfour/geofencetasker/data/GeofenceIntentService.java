@@ -26,6 +26,13 @@ import java.util.List;
 public class GeofenceIntentService extends IntentService {
 
     private static final String TAG = "GeofenceIntentService";
+    private TaskHelper mTaskHelper;
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        mTaskHelper = new TaskHelper(this);
+    }
 
     /**
      * Mandatory default constructor.
@@ -53,9 +60,8 @@ public class GeofenceIntentService extends IntentService {
 
         int geofenceTransition = geofencingEvent.getGeofenceTransition();
 
-        // Check that user has either entered or exited the geofence.
-        if (geofenceTransition == Geofence.GEOFENCE_TRANSITION_ENTER ||
-                geofenceTransition == Geofence.GEOFENCE_TRANSITION_EXIT) {
+        // Check that user has either entered the geofence.
+        if (geofenceTransition == Geofence.GEOFENCE_TRANSITION_ENTER) {
 
             // List the geofences that were triggered.
             List<Geofence> triggeredGeofences = geofencingEvent.getTriggeringGeofences();
@@ -116,17 +122,17 @@ public class GeofenceIntentService extends IntentService {
         String transitionString = getTransitionString(geofenceTransition);
 
         // Get IDs of each geofence that was triggered.
-        ArrayList<String> triggeredGeofencesIdList = new ArrayList<>();
+        ArrayList<String> triggeredGeofencesTaskList = new ArrayList<>();
         for (Geofence geofence : triggeredGeofences) {
-            triggeredGeofencesIdList.add(geofence.getRequestId());
+            // Get the corresponding task in the database.
+            Task task = mTaskHelper.getTaskById(Integer.parseInt(geofence.getRequestId()));
+            // Get the title of the task and add it to the list.
+            triggeredGeofencesTaskList.add(task.getTitle());
         }
 
-        // TODO: Pull ids from database.
-        // Get database singleton from Application class.
-        
-        String triggeringGeofencesIdsString = TextUtils.join(", ", triggeredGeofencesIdList);
+        String triggeringGeofencesTaskNames = TextUtils.join(", ", triggeredGeofencesTaskList);
 
-        return transitionString + ": " + triggeringGeofencesIdsString;
+        return transitionString + ": " + triggeringGeofencesTaskNames;
     }
 
     /**

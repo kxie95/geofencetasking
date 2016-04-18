@@ -78,6 +78,65 @@ public class TaskHelper extends SQLiteOpenHelper {
         db.close();
     }
 
+    public Task getTaskById(int id) {
+        // 1. get reference to readable DB
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        // 2. build query
+        Cursor cursor =
+                db.query(TABLE_NAME, // a. table
+                        TaskEntry.COLUMNS, // b. column names
+                        TaskEntry.COLUMN_NAME_ID + " = ?", // c. selections
+                        new String[] { String.valueOf(id) }, // d. selections args
+                        null, // e. group by
+                        null, // f. having
+                        null, // g. order by
+                        null); // h. limit
+
+        Task task = new Task();
+
+        if (cursor.moveToFirst()) {
+            task.setId(cursor.getInt(0));
+            task.setTitle(cursor.getString(1));
+            task.setAddress(cursor.getString(2));
+        }
+
+        cursor.close();
+        db.close();
+
+        return task;
+    }
+
+    public int getIdByFields(String title, String address) {
+        // 1. get reference to readable DB
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        // 2. build query
+        Cursor cursor =
+                db.query(TABLE_NAME, // a. table
+                        new String[] {TaskEntry.COLUMN_NAME_ID}, // b. column names
+                        TaskEntry.COLUMN_NAME_TITLE + " = ? AND "
+                                + TaskEntry.COLUMN_NAME_ADDRESS + " = ?", // c. selections
+                        new String[] {title, address}, // d. selections args
+                        null, // e. group by
+                        null, // f. having
+                        null, // g. order by
+                        null); // h. limit
+
+        int id = -1;
+
+        if (cursor.moveToFirst()) {
+            id = cursor.getInt(0);
+        }
+
+        cursor.close();
+        db.close();
+
+        Log.i("getTaskByFields", Integer.toString(id));
+
+        return id;
+    }
+
     public List<Task> getAllTasks() {
         Log.i("getAllTasks", "getAllTasks");
         List<Task> tasks = new ArrayList<Task>();
@@ -102,6 +161,9 @@ public class TaskHelper extends SQLiteOpenHelper {
         }
 
         Log.d("getAllTasks()", tasks.toString());
+
+        cursor.close();
+        db.close();
 
         return tasks;
     }
