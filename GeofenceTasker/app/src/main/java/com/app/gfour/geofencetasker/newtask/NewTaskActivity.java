@@ -11,7 +11,6 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import com.app.gfour.geofencetasker.R;
-import com.app.gfour.geofencetasker.data.GeofenceCreationService;
 import com.app.gfour.geofencetasker.data.GeofenceIntentService;
 import com.app.gfour.geofencetasker.data.Task;
 import com.app.gfour.geofencetasker.data.TaskHelper;
@@ -20,8 +19,8 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.GoogleApiClient.ConnectionCallbacks;
 import com.google.android.gms.common.api.GoogleApiClient.OnConnectionFailedListener;
-import com.google.android.gms.common.api.Status;
 import com.google.android.gms.common.api.ResultCallback;
+import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.Geofence;
 import com.google.android.gms.location.GeofencingRequest;
 import com.google.android.gms.location.LocationServices;
@@ -33,9 +32,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Shows the UI for creating a new task.
- * Note: I would normally create a fragment to go with this activity for best practices,
- * but we just wanna hack this thing out.
+ * Activity for creating a new task. Also contains logic for
+ * creating geofence for each task.
+ * Credits to: http://developer.android.com/training/location/geofencing.html
  */
 public class NewTaskActivity extends AppCompatActivity
         implements ConnectionCallbacks, OnConnectionFailedListener, ResultCallback<Status>{
@@ -87,7 +86,7 @@ public class NewTaskActivity extends AppCompatActivity
 
                     mTaskHelper.addTask(task);
 
-                    // Start intent service for creating task's geofence.
+                    // Create geofence for new task.
                     if (mSelectedPlace != null) {
                         int id = mTaskHelper.getIdByFields(task.getTitle(), task.getAddress());
                         addToGeofenceList(id, mSelectedPlace.getLatLng().latitude, mSelectedPlace.getLatLng().longitude);
@@ -166,9 +165,7 @@ public class NewTaskActivity extends AppCompatActivity
 
     @Override
     public void onConnectionSuspended(int cause) {
-        // The connection to Google Play services was lost for some reason.
         Log.i(TAG, "Connection suspended");
-        // onConnected() will be called again automatically when the service reconnects
     }
 
     @Override
@@ -180,7 +177,6 @@ public class NewTaskActivity extends AppCompatActivity
         }
     }
 
-    // Adds Geofence to List
     private void addToGeofenceList(int geofenceID, double latitude, double longitude) {
         Log.d(TAG, "ID: " + geofenceID + ", Latitude: " + latitude + ", Longitude: " + longitude);
         mGeofenceList.add(new Geofence.Builder()
@@ -188,7 +184,7 @@ public class NewTaskActivity extends AppCompatActivity
                 .setCircularRegion(
                         latitude,
                         longitude,
-                        100
+                        200
                 )
                 .setExpirationDuration(86400000)
                 .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER |
@@ -216,7 +212,6 @@ public class NewTaskActivity extends AppCompatActivity
     }
 
     private void createGeofence() {
-
         // Check if client is connected.
         if(!mGoogleApiClient.isConnected()) {
             mGoogleApiClient.connect();
@@ -238,7 +233,7 @@ public class NewTaskActivity extends AppCompatActivity
                 ).setResultCallback(this); // Result processed in onResult().
             } catch (SecurityException securityException) {
                 // Catch exception generated if the app does not use ACCESS_FINE_LOCATION permission.
-                // logSecurityException(securityException);
+                Log.e(TAG, "Invalid location permission.", securityException);
             }
         }
     }

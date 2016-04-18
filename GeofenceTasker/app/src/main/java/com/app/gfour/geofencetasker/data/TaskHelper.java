@@ -10,7 +10,7 @@ import android.util.Log;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.app.gfour.geofencetasker.data.TaskContract.*;
+import static com.app.gfour.geofencetasker.data.TaskContract.TaskEntry;
 
 /**
  * Helper for storing task data.
