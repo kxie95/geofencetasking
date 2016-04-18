@@ -4,4 +4,5 @@
     <string name="geofence_transition_entered">entered</string>
     <string name="geofence_transition_exited">exited</string>
     <string name="unknown_geofence_transition">unknown</string>
+    <string name="text_remove_task">Remove task</string>
 </resources>
