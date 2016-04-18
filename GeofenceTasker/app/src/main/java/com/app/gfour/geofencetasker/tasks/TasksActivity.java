@@ -6,8 +6,10 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
@@ -17,6 +19,8 @@ import com.app.gfour.geofencetasker.data.TaskHelper;
 import com.app.gfour.geofencetasker.newtask.NewTaskActivity;
 
 import java.util.ArrayList;
+
+import static android.view.ContextMenu.ContextMenuInfo;
 
 public class TasksActivity extends AppCompatActivity {
     private ArrayList<String> items;
@@ -52,6 +56,34 @@ public class TasksActivity extends AppCompatActivity {
         itemsAdapter = new ArrayAdapter<String>(this,
                 android.R.layout.simple_list_item_1, items);
         lvItems.setAdapter(itemsAdapter);
+        registerForContextMenu(lvItems);
+    }
+
+    @Override
+    public void onCreateContextMenu(android.view.ContextMenu menu, View v, ContextMenuInfo menuInfo) {
+        super.onCreateContextMenu(menu, v, menuInfo);
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.context_menu, menu);
+    }
+
+    @Override
+    public boolean onContextItemSelected(MenuItem item) {
+        AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
+        switch (item.getItemId()) {
+            case R.id.deleteItem:
+                String taskItem = itemsAdapter.getItem(info.position);
+
+                // Remove the task from the database.
+                String[] taskFields = taskItem.split("\n");
+                int id = taskHelper.getIdByFields(taskFields[0], taskFields[1]);
+                taskHelper.deleteTask(id);
+
+                // Remove the task from the listView.
+                itemsAdapter.remove(taskItem);
+                return true;
+            default:
+                return false;
+        }
     }
 
     @Override
