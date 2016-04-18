@@ -4,12 +4,17 @@ import android.app.IntentService;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.location.Location;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
 import android.support.annotation.Nullable;
 import android.util.Log;
+import android.widget.Toast;
 
+import com.app.gfour.geofencetasker.R;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.GoogleApiClient.ConnectionCallbacks;
@@ -21,6 +26,7 @@ import com.google.android.gms.location.places.Place;
 import com.google.android.gms.common.api.Status;
 import com.google.android.gms.common.api.ResultCallback;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class GeofenceCreationService extends IntentService
@@ -43,10 +49,14 @@ public class GeofenceCreationService extends IntentService
     public void onCreate() {
         super.onCreate();
 
+        // Create TaskHelper.
         mTaskHelper = new TaskHelper(this);
 
         // Create client.
         buildGoogleApiClient();
+
+        // Create empty geofence list.
+        mGeofenceList = new ArrayList<Geofence>();
 
         // Start client.
         mGoogleApiClient.connect();
@@ -63,6 +73,21 @@ public class GeofenceCreationService extends IntentService
     @Override
     public void onConnected(Bundle connectionHint) {
         Log.i(TAG, "Connected to GoogleApiClient");
+
+        try {
+            LocationServices.GeofencingApi.addGeofences(
+                    mGoogleApiClient,
+                    // The GeofenceRequest object.
+                    getGeofencingRequest(),
+                    // This
+                    // pending intent is used to generate an intent when a matched geofence
+                    // transition is observed.
+                    getGeofencePendingIntent()
+            ).setResultCallback(this); // Result processed in onResult().
+        } catch (SecurityException securityException) {
+            // Catch exception generated if the app does not use ACCESS_FINE_LOCATION permission.
+            // logSecurityException(securityException);
+        }
     }
 
     @Override
@@ -79,40 +104,22 @@ public class GeofenceCreationService extends IntentService
 
     @Override
     protected void onHandleIntent(Intent intent) {
+        //Get ID of task.
+        int id = mTaskHelper.getIdByFields(intent.getStringExtra("title"), intent.getStringExtra("address"));
 
-        String taskTitle = intent.getStringExtra("title");
-        String taskAddress = intent.getStringExtra("title");
         double taskLatitude = intent.getDoubleExtra("latitude", 0.0);
         double taskLongitude = intent.getDoubleExtra("longitude", 0.0);
 
-        //Get ID of task.
-        mTaskHelper
-
-        addToGeofenceList(taskTitle, );
-
-        try {
-            LocationServices.GeofencingApi.addGeofences(
-                    mGoogleApiClient,
-                    // The GeofenceRequest object.
-                    getGeofencingRequest(),
-                    // A pending intent that that is reused when calling removeGeofences(). This
-                    // pending intent is used to generate an intent when a matched geofence
-                    // transition is observed.
-                    getGeofencePendingIntent()
-            ).setResultCallback(this); // Result processed in onResult().
-        } catch (SecurityException securityException) {
-            // Catch exception generated if the app does not use ACCESS_FINE_LOCATION permission.
-            //logSecurityException(securityException);
-        }
+        addToGeofenceList(id, taskLatitude, taskLongitude);
     }
 
     // Adds Geofence to List
-    private void addToGeofenceList(String geofenceID, Place selectedPlace) {
+    private void addToGeofenceList(int geofenceID, double latitude, double longitude) {
             mGeofenceList.add(new Geofence.Builder()
-                    .setRequestId(geofenceID)
+                    .setRequestId(Integer.toString(geofenceID))
                     .setCircularRegion(
-                            selectedPlace.getLatLng().latitude,
-                            selectedPlace.getLatLng().longitude,
+                            latitude,
+                            longitude,
                             10
                     )
                     .setExpirationDuration(86400000)
@@ -141,7 +148,11 @@ public class GeofenceCreationService extends IntentService
 
     @Override
     public void onResult(Status status) {
-
+        if (status.isSuccess()) {
+            Log.i(TAG, "Geofence created for new task.");
+        } else {
+            Log.e(TAG, "Something went wrong. Geofence not created.");
+        }
     }
 }
 

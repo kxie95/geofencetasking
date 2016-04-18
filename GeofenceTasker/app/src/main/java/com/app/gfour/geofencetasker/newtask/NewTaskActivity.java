@@ -34,7 +34,6 @@ public class NewTaskActivity extends AppCompatActivity {
     private Button mDoneButton;
     private SupportPlaceAutocompleteFragment mSupportPlaceFragment;
     private TaskHelper mTaskHelper;
-    private GeofenceCreationService mGeofenceCreationService;
 
     /**
      * Store location here after the user selects it from gmap.
@@ -60,14 +59,10 @@ public class NewTaskActivity extends AppCompatActivity {
         mSupportPlaceFragment = (SupportPlaceAutocompleteFragment)
                 getSupportFragmentManager().findFragmentById(R.id.place_autocomplete_fragment);
 
-        // Create GeofenceCreationService
-        mGeofenceCreationService = new GeofenceCreationService();
-
         // Add listeners
         mDoneButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // TODO: Save title, description and location (latlong probs) in storage.
                 if (mSelectedAddress == null) {
                     Toast.makeText(getBaseContext(), "Please select a location.", Toast.LENGTH_LONG).show();
                 } else if (mTitle.getText() == null || mTitle.getText().equals("")) {

@@ -29,8 +29,6 @@ public class TasksActivity extends AppCompatActivity {
 
     private TaskHelper taskHelper;
 
-    private GoogleApiClient mGoogleApiClient;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
