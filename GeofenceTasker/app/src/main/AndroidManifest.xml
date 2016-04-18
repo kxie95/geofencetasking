@@ -23,8 +23,7 @@
         <activity
             android:name=".newtask.NewTaskActivity"
             android:label="Tasker"
-            android:theme="@style/AppTheme.NoActionBar">
-        </activity>
+            android:theme="@style/AppTheme.NoActionBar"/>
 
         <service android:name=".data.GeofenceIntentService" />
 

@@ -12,6 +12,7 @@ import android.os.IBinder;
 import android.support.v4.app.TaskStackBuilder;
 import android.support.v7.app.NotificationCompat;
 import android.util.Log;
+
 import com.app.gfour.geofencetasker.R;
 import com.app.gfour.geofencetasker.tasks.TasksActivity;
 import com.google.android.gms.maps.model.LatLng;
@@ -54,7 +55,7 @@ public class AchievementService extends Service {
         MajorContinents.put("Africa", new LatLng(8.78, 37.50));
         MajorContinents.put("Europe", new LatLng(54.52, 15.25));
         MajorContinents.put("America", new LatLng(37.09, 95.71));
-        MajorContinents.put("Antarctica", new LatLng(-83.49, 21.94));
+        MajorContinents.put("Antarctica", new LatLng(-78.65, 32.32));
     }
 
     public AchievementService() {
@@ -66,7 +67,6 @@ public class AchievementService extends Service {
         stopSelf();
     }
 
-    @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         // Convert the users task location into lat/long
         String locationString = intent.getStringExtra("Address");
