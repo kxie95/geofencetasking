@@ -116,7 +116,7 @@ public class AchievementService extends Service {
         SharedPreferences.Editor e = prefs.edit();
         e.putInt(closestDestination, continentTaskCount).apply();
 
-        if(continentTaskCount % 10 == 0){
+        if(continentTaskCount % 2 == 0){
             sendNotification("ACHIEVEMENT", "Well done! " + Integer.toString(continentTaskCount)
                     + " tasks done in " + closestDestination + "!");
         }
@@ -135,15 +135,20 @@ public class AchievementService extends Service {
 
         Double latDistance = Math.toRadians(lat2 - lat1);
         Double lonDistance = Math.toRadians(lon2 - lon1);
-        Double a = Math.sin(latDistance / 2) * Math.sin(latDistance / 2)
-                + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
-                * Math.sin(lonDistance / 2) * Math.sin(lonDistance / 2);
-        Double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        Double c = 2 * Math.atan2(Math.sqrt(calculateA(latDistance, lonDistance, lat1, lat2)), Math.sqrt(1 - calculateA(latDistance, lonDistance, lat1, lat2)));
         double distance = R * c * 1000; // convert to meters
 
         distance = Math.pow(distance, 2) + Math.pow(0, 2);
 
         return Math.sqrt(distance);
+    }
+
+    public static double calculateA(double latDist, double lngDist, double lat1, double lat2)
+    {
+        Double a = Math.sin(latDist / 2) * Math.sin(latDist / 2)
+                + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
+                * Math.sin(lngDist / 2) * Math.sin(lngDist / 2);
+        return a;
     }
 
     public void checkForThreeADay() {
