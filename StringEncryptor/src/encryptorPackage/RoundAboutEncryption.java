@@ -14,13 +14,12 @@ public class RoundAboutEncryption {
 
 	private static Map<String, String> fragmentDictionary = new HashMap<String, String>();
 
-	public static void main(String[] args) {
+	public static void Obfuscate(String copiedFileLocation) {
 
-		// TODO: Create a new copy of everything in a new file location?
 
 		try {
-			// Root of program specified in the args (should be src/java/main)
-			File programRootDirectory = new File(args[0]);
+			// Root of copied File should be specified
+			File programRootDirectory = new File(copiedFileLocation);
 
 			// Creates a package to store the generated java files
 			File generatedDirectory = new File(programRootDirectory.toString() + "\\SDC");
@@ -196,7 +195,7 @@ public class RoundAboutEncryption {
 
 			// Iterates over all the files, applying string encryption to java classes
 			FileWalker fileWalker = new FileWalker();
-			fileWalker.walk(args[0], encryptionKeyString);
+			fileWalker.walk(copiedFileLocation, encryptionKeyString);
 
 		} catch (
 
