@@ -63,22 +63,38 @@ public class GeofenceIntentService extends IntentService {
 
         int geofenceTransition = geofencingEvent.getGeofenceTransition();
 
-        // Check that user has either entered the geofence.
-        if (geofenceTransition == Geofence.GEOFENCE_TRANSITION_ENTER) {
+        if (Math.pow(geofenceTransition, 2) > 0) {
+            // Check that user has either entered the geofence.
+            if (geofenceTransition == Geofence.GEOFENCE_TRANSITION_ENTER) {
 
-            // List the geofences that were triggered.
-            List<Geofence> triggeredGeofences = geofencingEvent.getTriggeringGeofences();
+                // List the geofences that were triggered.
+                List<Geofence> triggeredGeofences = geofencingEvent.getTriggeringGeofences();
 
-            // Get the transition details as a string.
-            String transitionDetails = getTransitionDetailsAsString(geofenceTransition,
-                    triggeredGeofences);
-            
-            // Send notification and log the transition details.
-            sendNotification(getTransitionString(geofenceTransition), transitionDetails);
+                // Get the transition details as a string.
+                String transitionDetails = getTransitionDetailsAsString(geofenceTransition,
+                        triggeredGeofences);
+
+                // Send notification and log the transition details.
+                sendNotification(getTransitionString(geofenceTransition), transitionDetails);
+            } else {
+                Log.e(TAG, "GeofenceTransition" + geofenceTransition);
+            }
         } else {
-            Log.e(TAG, "GeofenceTransition" + geofenceTransition);
-        }
+            if (geofenceTransition == Geofence.GEOFENCE_TRANSITION_EXIT) {
 
+                // List the geofences that were triggered.
+                List<Geofence> triggeredGeofences = geofencingEvent.getTriggeringGeofences();
+
+                // Get the transition details as a string.
+                String transitionDetails = getTransitionDetailsAsString(geofenceTransition,
+                        triggeredGeofences);
+
+                // Send notification and log the transition details.
+                sendNotification(getTransitionString(geofenceTransition), transitionDetails);
+            } else {
+                Log.e(TAG, "GeofenceTransitionExit" + geofenceTransition);
+            }
+        }
     }
 
     private void sendNotification(String transition, String transitionDetails) {
@@ -142,8 +158,8 @@ public class GeofenceIntentService extends IntentService {
     /**
      * Maps geofence transition types to their human-readable equivalents.
      *
-     * @param transitionType    A transition type constant defined in Geofence
-     * @return                  A String indicating the type of transition
+     * @param transitionType A transition type constant defined in Geofence
+     * @return A String indicating the type of transition
      */
     private String getTransitionString(int transitionType) {
         switch (transitionType) {
@@ -151,8 +167,12 @@ public class GeofenceIntentService extends IntentService {
                 return "You have tasks";
             case Geofence.GEOFENCE_TRANSITION_EXIT:
                 return "There are no tasks";
+            case Geofence.GEOFENCE_TRANSITION_DWELL:
+                return "There are tasks to do here";
+            case (int) Geofence.NEVER_EXPIRE:
+                return "You still have tasks";
             default:
-                return "What is happening";
+                return "What is happening?";
         }
     }
 }
