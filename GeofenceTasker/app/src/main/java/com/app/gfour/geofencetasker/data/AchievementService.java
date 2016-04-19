@@ -55,7 +55,6 @@ public class AchievementService extends Service {
         MajorContinents.put("Africa", new LatLng(8.78, 37.50));
         MajorContinents.put("Europe", new LatLng(54.52, 15.25));
         MajorContinents.put("America", new LatLng(37.09, 95.71));
-        MajorContinents.put("Antarctica", new LatLng(-78.65, 32.32));
     }
 
     public AchievementService() {
@@ -117,7 +116,7 @@ public class AchievementService extends Service {
         SharedPreferences.Editor e = prefs.edit();
         e.putInt(closestDestination, continentTaskCount).apply();
 
-        if(continentTaskCount % 2 == 0){
+        if(continentTaskCount % 10 == 0){
             sendNotification("ACHIEVEMENT", "Well done! " + Integer.toString(continentTaskCount)
                     + " tasks done in " + closestDestination + "!");
         }
