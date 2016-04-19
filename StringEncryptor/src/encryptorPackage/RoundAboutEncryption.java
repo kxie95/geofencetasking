@@ -14,10 +14,8 @@ public class RoundAboutEncryption {
 
 	private static Map<String, String> fragmentDictionary = new HashMap<String, String>();
 
-	public static void Obfuscate(String copiedFileLocation) {
-
-
-		try {
+	public static void Obfuscate(String copiedFileLocation) throws Exception {
+		
 			// Root of copied File should be specified
 			File programRootDirectory = new File(copiedFileLocation);
 
@@ -197,10 +195,9 @@ public class RoundAboutEncryption {
 			FileWalker fileWalker = new FileWalker();
 			fileWalker.walk(copiedFileLocation, encryptionKeyString);
 
-		} catch (
-
-		IOException e) {
-			e.printStackTrace();
 		}
-	}
 }
+
+		
+	
+
