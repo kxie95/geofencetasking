@@ -141,6 +141,9 @@ public class ToolGUI {
 
 }
 
+/**
+ * Class to start obfuscation work in the background.
+ */
 class ObfuscatorWorker extends SwingWorker<Void, String> {
 
 	private File srcDir;
