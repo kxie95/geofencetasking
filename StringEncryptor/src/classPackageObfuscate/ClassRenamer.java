@@ -41,17 +41,21 @@ class Start {
  * and ContentProvider.
  */
 public class ClassRenamer {
+	// Relative path to AndroidManifest file.
+	private static final String PATH_TO_MANIFEST = "\\app\\src\\main\\AndroidManifest.xml";
+	
+	// Relative path to java src code.
+	private static final String PATH_TO_SRC = "\\app\\src\\main\\java";
 	
 	// Set with list of possible Android components
 	private Set<String> androidComponents = new HashSet<String>(); 
+	
 	// Used to generate a random string.
 	private SecureRandom random = new SecureRandom();
-	// Relative path to AndroidManifest file.
-	private static final String PATH_TO_MANIFEST = "\\app\\src\\main\\AndroidManifest.xml";
-	// Relative path to java src code.
-	private static final String PATH_TO_SRC = "\\app\\src\\main\\java";
+	
 	// Name of the top level package.
 	String packageName = "";
+	// Names of components found in the manifest.
 	Map<String, String> componentNames;
 	
 	/**
@@ -119,10 +123,10 @@ public class ClassRenamer {
 	    	
 	    	
 	    }
-		// Check if it's a component file
+		// R
 		//if (componentNames.containsKey(file.getAbsolutePath()))
 		
-		// Else it's not a compoenent, but check if it has references.
+		// Else it's not a component, but check if it has references.
 		
 	}
 
@@ -141,11 +145,13 @@ public class ClassRenamer {
 			for (int i = 0; i < nl.getLength(); i++) {
 				NamedNodeMap attributes = nl.item(i).getAttributes();
 				String nameValue = attributes.getNamedItem("android:name").getNodeValue();
-				if (nameValue.startsWith(".")) {
-					componentNames.put(packageName + nameValue, generateRandomName());
-				} else {
-					componentNames.put(nameValue, generateRandomName());
-				}
+				//if (nameValue.startsWith(".")) {
+					String className = nameValue.substring(nameValue.lastIndexOf(".") + 1);
+					System.out.println("Class name: " + className);
+					componentNames.put(className, generateRandomName());
+				//} else {
+				//	componentNames.put(nameValue, generateRandomName());
+				//}
 			}
 		}
 		
