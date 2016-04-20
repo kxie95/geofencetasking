@@ -32,7 +32,7 @@ import org.xml.sax.SAXException;
 class Start {
 	public static void main(String[] args) {
 		ClassRenamer cr = new ClassRenamer();
-		cr.renameClasses("C:\\Users\\karen\\Desktop\\Android  Studio Projects\\groupfour\\TaskerProguardTest");
+		cr.renameClasses("C:\\Users\\karen\\Desktop\\Android Studio Projects\\groupfour\\TaskerProguardTest");
 	}
 }
 /**
@@ -80,8 +80,8 @@ public class ClassRenamer {
 				System.out.println(s + " " + componentNames.get(s));
 			}
 			
-			renameFilesAndRefs(rootDir + PATH_TO_SRC);
-			
+			// Walk through files and rename.
+			walkThroughFiles(rootDir + PATH_TO_SRC);
 			
 		} catch (ParserConfigurationException pce) {
 			pce.printStackTrace();
@@ -93,42 +93,36 @@ public class ClassRenamer {
 		
 	}
 	
-	private void renameFilesAndRefs(String srcPath) throws FileNotFoundException {
+	/**
+	 * Recursively looks through all the files in a given path.
+	 * @param srcPath Root of the path to start looking for files from.
+	 * @throws IOException 
+	 */
+	private void walkThroughFiles(String srcPath) throws IOException {
 		File dir = new File(srcPath);
 		File [] files = dir.listFiles();
 		for (File f : files) {
 			// Keep looking if is directory.
 			if (f.isDirectory()) {
-				renameFilesAndRefs(f.getAbsolutePath());
+				walkThroughFiles(f.getAbsolutePath());
 			} else { // Else, it's a java file.
 				System.out.println(f.getName());
-				replaceReferences(f);
+				replaceReferencesInFile(f);
 			}
 		}
 		
 	}
 
-	private void replaceReferences(File file) throws FileNotFoundException {
-	    Scanner scanner = new Scanner(file);
-	    boolean isComponent = false;
-	    while (scanner.hasNextLine()) {
-	    	String line = scanner.nextLine();
-	    	if (line.startsWith("package")) {
-	    		line = line.replace("package ", "");
-	    		line.replace(";", "");
-	    		if (componentNames.containsKey(line)) {
-	    			isComponent = true;
-	    		}
-	    	}
-	    	
-	    	
-	    }
-		// R
-		//if (componentNames.containsKey(file.getAbsolutePath()))
-		
-		// Else it's not a component, but check if it has references.
-		
-	}
+	/**
+	 * Replaces references of components in the componentName hash map with its randomly generated key.
+	 * Does not handle duplicate class names.
+	 * @param file
+	 * @throws IOException 
+	 */
+	private void replaceReferencesInFile(File file) throws IOException {
+	    // First check import statements to see which classes it contains.
+		// Add these to a hashset? 
+	}	
 
 	private Map<String, String> getComponentNames(Document xmlDoc) {
 		Map<String, String> componentNames = new HashMap<String, String>();
@@ -145,13 +139,11 @@ public class ClassRenamer {
 			for (int i = 0; i < nl.getLength(); i++) {
 				NamedNodeMap attributes = nl.item(i).getAttributes();
 				String nameValue = attributes.getNamedItem("android:name").getNodeValue();
-				//if (nameValue.startsWith(".")) {
-					String className = nameValue.substring(nameValue.lastIndexOf(".") + 1);
-					System.out.println("Class name: " + className);
-					componentNames.put(className, generateRandomName());
-				//} else {
-				//	componentNames.put(nameValue, generateRandomName());
-				//}
+				if (nameValue.startsWith(".")) {
+					componentNames.put(packageName + nameValue, generateRandomName());
+				} else {
+					componentNames.put(nameValue, generateRandomName());
+				}
 			}
 		}
 		
