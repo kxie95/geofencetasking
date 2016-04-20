@@ -34,6 +34,3 @@ build/
 
 #NDK
 obj/
-
-#Eclipse
-.metadata
