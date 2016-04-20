@@ -67,24 +67,32 @@ public class AchievementService extends Service {
     }
 
     public int onStartCommand(Intent intent, int flags, int startId) {
+        checkAchievementCriteria(intent);
+        return super.onStartCommand(intent, flags, startId);
+    }
+
+    public void checkAchievementCriteria(Intent intent) {
         // Convert the users task location into lat/long
         String locationString = intent.getStringExtra("Address");
 
+        // Set latitude and longitude of location.
+        setLatLng(locationString);
+
+        // Execute checks which will award achievements.
+        checkForThreeADay();
+        checkForLocationCount();
+    }
+
+    public void setLatLng(String locString) {
         Geocoder gc = new Geocoder(this);
         try {
-            List<Address> list = gc.getFromLocationName(locationString, 1);
+            List<Address> list = gc.getFromLocationName(locString, 1);
             Address address = list.get(0);
             lat = address.getLatitude();
             lng = address.getLongitude();
         } catch (Exception e) {
             Log.e(TAG, e.getMessage());
         }
-
-        // Execute checks which will award achievements
-        checkForThreeADay();
-        checkForLocationCount();
-
-        return super.onStartCommand(intent, flags, startId);
     }
 
     @Override
@@ -123,11 +131,11 @@ public class AchievementService extends Service {
     }
 
     /*
- * Calculate distance between two points in latitude and longitude.
- * lat1, lon1 Start point lat2, lon2 End point el1 Start altitude in meters
- * @returns Distance in Meters
- * Does not need to be accurate as only continents are being calculated
- */
+     * Calculate distance between two points in latitude and longitude.
+     * lat1, lon1 Start point lat2, lon2 End point el1 Start altitude in meters
+     * @returns Distance in Meters
+     * Does not need to be accurate as only continents are being calculated
+     */
     public static double distance(double lat1, double lat2, double lon1,
                                   double lon2) {
 
@@ -182,6 +190,27 @@ public class AchievementService extends Service {
     }
 
     private void sendNotification(String title, String details) {
+        // Get a notification builder that's compatible with platform versions >= 4
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this);
+
+        // Define the notification settings.
+        builder.setSmallIcon(R.drawable.ic_media_play)
+                .setContentTitle(title)
+                .setContentText(details)
+                .setContentIntent(getPendingNotificationIntent());
+
+        // Dismiss notification once the user touches it.
+        builder.setAutoCancel(true);
+
+        // Get an instance of the Notification manager
+        NotificationManager mNotificationManager =
+                (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+
+        // Issue the notification
+        mNotificationManager.notify(0, builder.build());
+    }
+
+    public PendingIntent getPendingNotificationIntent() {
         // Create an explicit content Intent that starts the main Activity.
         Intent notificationIntent = new Intent(getApplicationContext(), TasksActivity.class);
 
@@ -198,23 +227,6 @@ public class AchievementService extends Service {
         PendingIntent notificationPendingIntent =
                 stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
 
-        // Get a notification builder that's compatible with platform versions >= 4
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(this);
-
-        // Define the notification settings.
-        builder.setSmallIcon(R.drawable.ic_media_play)
-                .setContentTitle(title)
-                .setContentText(details)
-                .setContentIntent(notificationPendingIntent);
-
-        // Dismiss notification once the user touches it.
-        builder.setAutoCancel(true);
-
-        // Get an instance of the Notification manager
-        NotificationManager mNotificationManager =
-                (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-
-        // Issue the notification
-        mNotificationManager.notify(0, builder.build());
+        return notificationPendingIntent;
     }
 }

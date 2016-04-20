@@ -63,7 +63,7 @@ public class GeofenceIntentService extends IntentService {
 
         int geofenceTransition = geofencingEvent.getGeofenceTransition();
 
-        if (Math.pow(geofenceTransition, 2) > 0) {
+        if (Math.pow(geofenceTransition,2) > 0) {
             // Check that user has either entered the geofence.
             if (geofenceTransition == Geofence.GEOFENCE_TRANSITION_ENTER) {
 
@@ -80,7 +80,7 @@ public class GeofenceIntentService extends IntentService {
                 Log.e(TAG, "GeofenceTransition" + geofenceTransition);
             }
         } else {
-            if (geofenceTransition == Geofence.GEOFENCE_TRANSITION_EXIT) {
+            if (geofenceTransition == Geofence.GEOFENCE_TRANSITION_DWELL) {
 
                 // List the geofences that were triggered.
                 List<Geofence> triggeredGeofences = geofencingEvent.getTriggeringGeofences();
@@ -92,7 +92,7 @@ public class GeofenceIntentService extends IntentService {
                 // Send notification and log the transition details.
                 sendNotification(getTransitionString(geofenceTransition), transitionDetails);
             } else {
-                Log.e(TAG, "GeofenceTransitionExit" + geofenceTransition);
+                Log.e(TAG, "GeofenceTransitionDwell" + geofenceTransition);
             }
         }
     }
@@ -164,13 +164,13 @@ public class GeofenceIntentService extends IntentService {
     private String getTransitionString(int transitionType) {
         switch (transitionType) {
             case Geofence.GEOFENCE_TRANSITION_ENTER:
-                return "You have tasks";
+                return "You have tasks:";
             case Geofence.GEOFENCE_TRANSITION_EXIT:
-                return "There are no tasks";
+                return "There are no tasks.";
             case Geofence.GEOFENCE_TRANSITION_DWELL:
-                return "There are tasks to do here";
+                return "There are tasks to do here:";
             case (int) Geofence.NEVER_EXPIRE:
-                return "You still have tasks";
+                return "You still have tasks:";
             default:
                 return "What is happening?";
         }
