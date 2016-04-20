@@ -110,45 +110,45 @@ public class GeofenceIntentService extends IntentService {
         // Push the content Intent onto the stack.
         stackBuilder.addNextIntent(notificationIntent);
 
-        // Get a PendingIntent containing the entire back stack.
-        PendingIntent notificationPendingIntent =
-                stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
-
-        // Get a notification builder that's compatible with platform versions >= 4
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(this);
-
-        // Define the notification settings.
-        builder.setSmallIcon(R.drawable.ic_media_play)
-                .setContentTitle(transition)
-                .setContentText(transitionDetails)
-                .setContentIntent(notificationPendingIntent);
-
-        // Dismiss notification once the user touches it.
-        builder.setAutoCancel(true);
-
-        // Get an instance of the Notification manager
-        NotificationManager mNotificationManager =
-                (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-
-        // Issue the notification
-        mNotificationManager.notify(0, builder.build());
+        if (transition != null) {
+            // Get a PendingIntent containing the entire back stack.
+            PendingIntent notificationPendingIntent =
+                    stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
+            issueNotification(transition, transitionDetails, notificationPendingIntent);
+        } else {
+            PendingIntent notificationPendingIntent =
+                    stackBuilder.getPendingIntent(0, PendingIntent.FLAG_CANCEL_CURRENT);
+            issueNotification(transition, transitionDetails, notificationPendingIntent);
+        }
     }
-
 
     private String getTransitionDetailsAsString(
             int geofenceTransition,
             List<Geofence> triggeredGeofences) {
         String transitionString = getTransitionString(geofenceTransition);
-
-        // Get IDs of each geofence that was triggered.
         ArrayList<String> triggeredGeofencesTaskList = new ArrayList<>();
-        for (Geofence geofence : triggeredGeofences) {
-            // Get the corresponding task in the database.
-            Task task = mTaskHelper.getTaskById(Integer.parseInt(geofence.getRequestId()));
 
-            if (task != null && task.getTitle() != null && !task.getTitle().equals("")) {
-                // Get the title of the task and add it to the list.
-                triggeredGeofencesTaskList.add(task.getTitle());
+        if (transitionString == null) {
+            for (Geofence geofence1 : triggeredGeofences) {
+                for (Geofence geofence2: triggeredGeofences) {
+                    Task task1 = mTaskHelper.getTaskById(Integer.parseInt(geofence1.getRequestId()));
+                    Task task2 = mTaskHelper.getTaskById(Integer.parseInt(geofence2.getRequestId()));
+
+                    if (task1.getTitle() != task2.getTitle()) {
+                        task1.setId(Integer.parseInt(geofence1.getRequestId()));
+                    }
+                }
+            }
+        } else {
+            // Get title of each geofence that was triggered.
+            for (Geofence geofence : triggeredGeofences) {
+                // Get the corresponding task in the database.
+                Task task = mTaskHelper.getTaskById(Integer.parseInt(geofence.getRequestId()));
+
+                if (task != null && task.getTitle() != null && !task.getTitle().equals("")) {
+                    // Get the title of the task and add it to the list.
+                    triggeredGeofencesTaskList.add(task.getTitle());
+                }
             }
         }
 
@@ -174,5 +174,26 @@ public class GeofenceIntentService extends IntentService {
             default:
                 return "What is happening?";
         }
+    }
+
+    private void issueNotification(String title, String text, PendingIntent intent) {
+        // Get a notification builder that's compatible with platform versions >= 4
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this);
+
+        // Define the notification settings.
+        builder.setSmallIcon(R.drawable.ic_media_play)
+                .setContentTitle(title)
+                .setContentText(text)
+                .setContentIntent(intent);
+
+        // Dismiss notification once the user touches it.
+        builder.setAutoCancel(true);
+
+        // Get an instance of the Notification manager
+        NotificationManager mNotificationManager =
+                (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+
+        // Issue the notification
+        mNotificationManager.notify(0, builder.build());
     }
 }

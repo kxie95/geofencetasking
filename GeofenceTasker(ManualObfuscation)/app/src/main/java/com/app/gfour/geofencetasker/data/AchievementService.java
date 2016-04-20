@@ -71,7 +71,7 @@ public class AchievementService extends Service {
         return super.onStartCommand(intent, flags, startId);
     }
 
-    public void checkAchievementCriteria(Intent intent) {
+    private void checkAchievementCriteria(Intent intent) {
         // Convert the users task location into lat/long
         String locationString = intent.getStringExtra("Address");
 
@@ -83,7 +83,7 @@ public class AchievementService extends Service {
         checkForLocationCount();
     }
 
-    public void setLatLng(String locString) {
+    private void setLatLng(String locString) {
         Geocoder gc = new Geocoder(this);
         try {
             List<Address> list = gc.getFromLocationName(locString, 1);
@@ -102,7 +102,6 @@ public class AchievementService extends Service {
     }
 
     public void checkForLocationCount() {
-
         String closestDestination = "The Matrix";
         double closestDistance = Double.MAX_VALUE;
 
@@ -124,7 +123,7 @@ public class AchievementService extends Service {
         SharedPreferences.Editor e = prefs.edit();
         e.putInt(closestDestination, continentTaskCount).apply();
 
-        if(continentTaskCount % 2 == 0){
+        if(continentTaskCount % 5 == 0){
             sendNotification("ACHIEVEMENT", "Well done! " + Integer.toString(continentTaskCount)
                     + " tasks done in " + closestDestination + "!");
         }
@@ -178,14 +177,25 @@ public class AchievementService extends Service {
             e.putInt("secondTask", seconds).apply();
         } else if (thirdTask == 0) {
             e.putInt("thirdTask", seconds).apply();
+            checkIfThirdTask(seconds, firstTask, secondTask, thirdTask, e);
         } else {
-            if (seconds - firstTask <= secondsInADay) {
-                sendNotification("ACHIEVEMENT", "Well done! Three in a day!");
-            }
+            checkIfThirdTask(seconds, firstTask, secondTask, thirdTask, e);
+        }
+    }
+
+    private void checkIfThirdTask(int currentTaskTime, int firstTaskTime, int secondTaskTime, int thirdTaskTime, SharedPreferences.Editor e) {
+        if (currentTaskTime - firstTaskTime <= secondsInADay) {
+            sendNotification("ACHIEVEMENT", "Well done! Three tasks in a day!");
+
+            // Reset times of subsequent tasks.
+            e.putInt("firstTask", 0).apply();
+            e.putInt("secondTask", 0).apply();
+            e.putInt("thirdTask", 0).apply();
+        } else {
             // Shuffles tasks around, so the three latest completed tasks are kept up to date
-            e.putInt("firstTask", secondTask).apply();
-            e.putInt("secondTask", thirdTask).apply();
-            e.putInt("thirdTask", seconds).apply();
+            e.putInt("firstTask", secondTaskTime).apply();
+            e.putInt("secondTask", thirdTaskTime).apply();
+            e.putInt("thirdTask", currentTaskTime).apply();
         }
     }
 
@@ -210,7 +220,7 @@ public class AchievementService extends Service {
         mNotificationManager.notify(0, builder.build());
     }
 
-    public PendingIntent getPendingNotificationIntent() {
+    private PendingIntent getPendingNotificationIntent() {
         // Create an explicit content Intent that starts the main Activity.
         Intent notificationIntent = new Intent(getApplicationContext(), TasksActivity.class);
 
