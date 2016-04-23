@@ -30,6 +30,7 @@ import com.github.javaparser.ast.body.VariableDeclarator;
 import com.github.javaparser.ast.body.VariableDeclaratorId;
 import com.github.javaparser.ast.expr.AnnotationExpr;
 import com.github.javaparser.ast.expr.AssignExpr;
+import com.github.javaparser.ast.expr.CastExpr;
 import com.github.javaparser.ast.expr.Expression;
 import com.github.javaparser.ast.expr.MethodCallExpr;
 import com.github.javaparser.ast.expr.NameExpr;
@@ -49,7 +50,8 @@ public class ArgumentObfuscator {
     public static void main(String[] args) throws Exception {
     	String inputFilePath = "C:/Users/alyssaong/Documents/eclipse workspace/overloadobfuscation/src/data/AchievementServiceCopy.java";
     	// Replace this with user input directory
-    	String dirPath = "C:/Users/alyssaong/Documents/eclipse workspace/overloadobfuscation/src/test/";
+    	String dirPath = "C:/Users/alyssaong/AndroidStudioProjects/geofencetasking/GeofenceTasker/app/src/main/java/com/app/gfour/geofencetasker" + "/";
+//    	String dirPath = "C:/Users/alyssaong/Documents/eclipse workspace/overloadobfuscation/src/test/";
     	String classFilePath =  "C:/Users/alyssaong/Documents/eclipse workspace/overloadobfuscation/src/data/Ag.java";
     	
     	// Write class files for Ag
@@ -160,13 +162,18 @@ public class ArgumentObfuscator {
         	paramList = m.getParameters();
 //        	System.out.println(paramList);
         	//TODO: find out why the last one has an Ag parameter and array parameter.
+        	int argCount = 0;
         	for (Parameter p: paramList){
+        		/* OLD INDEX ASSIGNMENT*/
         		// Check type counter to get index
         		// If there was already an existing parameter type then increment counter
-        		int typeCount = argTypeFreq.containsKey(p.getType()) ? argTypeFreq.get(p.getType()) : 0;
-        		argTypeFreq.put(p.getType(), typeCount + 1);
-        		// Make map of parameter type, name and type count (which will be the index)
-        		ParameterMap pmap = new ParameterMap(p.getType(), p.getId().getName(), typeCount);
+//        		int typeCount = argTypeFreq.containsKey(p.getType()) ? argTypeFreq.get(p.getType()) : 0;
+//        		argTypeFreq.put(p.getType(), typeCount + 1);
+        		
+        		/* NEW INDEX ASSIGNMENT */
+        		// Make map of parameter type, name and count (which will be the index)
+        		ParameterMap pmap = new ParameterMap(p.getType(), p.getId().getName(), argCount);
+        		argCount++;
         		paramMap.add(pmap);
         	}
         	// Initialise argument name
@@ -188,11 +195,13 @@ public class ArgumentObfuscator {
         		// Expression for the index of the method call
         		NameExpr argIndexExpr = new NameExpr(""+pm.getTypeCount());
         		List<Expression> argExprList = new ArrayList<Expression>();
-        		argExprList.add(argNameExpr);
+//        		argExprList.add(argNameExpr);
         		argExprList.add(argIndexExpr);
         		MethodCallExpr getVarExpr = new MethodCallExpr(varNameExpr, "getArg", argExprList);
+        		// Cast the method call
+        		CastExpr castExpr = new CastExpr(new ClassOrInterfaceType(pm.getType().toString()), getVarExpr);
         		// Make assignment expression for getting the value back
-        		AssignExpr assignExpr = new AssignExpr(argNameExpr, getVarExpr, AssignExpr.Operator.assign);
+        		AssignExpr assignExpr = new AssignExpr(argNameExpr, castExpr, AssignExpr.Operator.assign);
         		// Create the string for the statements to write into file
         		statementString = statementString + vexprStmt.toString() + "\n" + assignExpr.toString() + ";" + "\n";
         	}
@@ -254,7 +263,6 @@ public class ArgumentObfuscator {
         
         // Sort the map by line number
 		lineExpMap = sortMap(lineExpMap);
-		System.out.println(lineExpMap);
 		// Iterate through map, write to file
 		ObfuscationFileWriter obsFileWriter = new ObfuscationFileWriter();
 		obsFileWriter.WriteToFile(lineExpMap, inputFilePath, tempFilePath);
@@ -308,7 +316,6 @@ public class ArgumentObfuscator {
         	// Replace method parameters with Ag x
         	m.setParameters(paramList);
         }
-        System.out.println(cu);
         // Write the compilation unit to a file
         ObfuscationFileWriter obsFileWriter = new ObfuscationFileWriter();
         obsFileWriter.writeCuToFile(cu,inputFilePath,tempFilePath);
