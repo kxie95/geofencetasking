@@ -128,8 +128,7 @@ public class AchievementService extends Service {
  * @returns Distance in Meters
  * Does not need to be accurate as only continents are being calculated
  */
-    public static double distance(double lat1, double lat2, double lon1,
-                                  double lon2) {
+    public static double distance(double lat1, double lat2, double lon1, double lon2) {
 
         final int R = 6371; // Radius of the earth
 

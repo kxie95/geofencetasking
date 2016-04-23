@@ -17,5 +17,4 @@ public class ParameterMap
     public Type getType()   { return type; }
     public String getName() { return name; }
     public int getTypeCount() {return typeCount;}
-    // Make a set index field
 }

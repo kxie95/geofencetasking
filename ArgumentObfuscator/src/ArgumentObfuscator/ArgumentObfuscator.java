@@ -9,11 +9,14 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 
 import com.github.javaparser.JavaParser;
@@ -25,6 +28,7 @@ import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.body.Parameter;
 import com.github.javaparser.ast.body.VariableDeclarator;
 import com.github.javaparser.ast.body.VariableDeclaratorId;
+import com.github.javaparser.ast.expr.AnnotationExpr;
 import com.github.javaparser.ast.expr.AssignExpr;
 import com.github.javaparser.ast.expr.Expression;
 import com.github.javaparser.ast.expr.MethodCallExpr;
@@ -38,35 +42,92 @@ import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
 
 public class ArgumentObfuscator {
 
-	private PackageDeclaration packageDecl;
 	private static List<Type> argTypes = new ArrayList<Type>();
-	private static List<ImportDeclaration> importList = new ArrayList<ImportDeclaration>();
-	private static ObfuscationFileWriter obsFileWriter = new ObfuscationFileWriter();
+	private static MethodCallVisitor mcv = new MethodCallVisitor();
+	private static MethodVisitor mdv = new MethodVisitor();
 	
     public static void main(String[] args) throws Exception {
-    	//Change these later
     	String inputFilePath = "C:/Users/alyssaong/Documents/eclipse workspace/overloadobfuscation/src/data/AchievementServiceCopy.java";
-    	String tempFilePath = "C:/Users/alyssaong/Documents/eclipse workspace/overloadobfuscation/src/data/AchievementServiceCopyTemp.java";
-    	String dirPath = "C:/Users/alyssaong/Documents/eclipse workspace/overloadobfuscation/src/data/";
+    	// Replace this with user input directory
+    	String dirPath = "C:/Users/alyssaong/Documents/eclipse workspace/overloadobfuscation/src/test/";
     	String classFilePath =  "C:/Users/alyssaong/Documents/eclipse workspace/overloadobfuscation/src/data/Ag.java";
-    	// Write in Ag initialisers
-    	// Uses filewriter to write to file
-    	writeAgInitialisers(inputFilePath, tempFilePath);
-
-    	// Write in changes to method declarations and initialisers
-    	// Uses filewriter to write to file
-    	writeMethodDecChange(inputFilePath, tempFilePath);
-
-    	// Write in argument changes i.e. replace method call argument with Agn
-    	// Uses javaparser CU to write to file
-    	writeArgumentChange(inputFilePath, tempFilePath);
     	
     	// Write class files for Ag
     	// Gonna manually do this one so don't need
-//    	writeAgClassFile(inputFilePath, classFilePath);
+    	writeChangesToClassFile(dirPath);
     }
     
-    private static void writeMethodDecChange(String inputFilePath, String tempFilePath) throws ParseException, IOException{
+    /* Traverse through all the files and return list of names of methods that we will change*/
+    private static void writeChangesToClassFile(String dirPath) throws ParseException, IOException {
+    	FileWalker fw = new FileWalker();
+    	List<String> javaFilePathsFound = new ArrayList<String>();
+    	javaFilePathsFound = fw.getFilePathsFound(dirPath);
+    	// Get names of all methods to modify from all the java files found
+    	Set<String> namesOfMethodsToModify = getMethodNamesToModify(javaFilePathsFound);
+    	// Go through each class and make changes
+    	for (String path: javaFilePathsFound){
+    		String tempFilePath = File.createTempFile("tempfile", ".java").getAbsolutePath();
+        	// Write in Ag initialisers
+        	// Uses filewriter to write to file
+    		writeAgInitialisers(path, tempFilePath, namesOfMethodsToModify);
+        	// Write in changes to method declarations and initialisers
+        	// Uses filewriter to write to file
+        	writeMethodDecChange(path, tempFilePath, namesOfMethodsToModify);
+        	// Write in argument changes i.e. replace method call argument with Agn
+        	// Uses javaparser CU to write to file
+        	writeArgumentChange(path, tempFilePath, namesOfMethodsToModify);
+    	}
+//        CompilationUnit cu;
+//        try {
+//            // parse the file
+//            cu = JavaParser.parse(in);
+//        } finally {
+//            in.close();
+//        }
+        
+    }
+    
+    private static Set<String> getMethodNamesToModify(List<String> filePaths) throws ParseException, IOException {
+    	/* - Get all method declarations
+    	 - Get all method calls
+    	 - Check for overlaps, exclude superclasses and method declarations with no parameters
+    	 - Return list of method names */
+    	Set<String> namesOfMethodsDeclared = new HashSet<String>();
+    	Set<String> namesOfMethodsCalled = new HashSet<String>();
+    	Set<String> namesOfMethodsToModify = new HashSet<String>();
+    	
+    	for (String path: filePaths){
+    		FileInputStream in = new FileInputStream(path);
+    		CompilationUnit cu;
+            try {
+                // parse the file
+                cu = JavaParser.parse(in);
+            } finally {
+                in.close();
+            }
+            // Get list of all method calls
+            List<MethodCallExpr> methodCalls = mcv.getMethodCalls(cu, null);
+            // Get list of all method declarations
+            List<MethodDeclaration> methodDeclarations = mdv.getMethods(cu, null);
+            for (MethodCallExpr m: methodCalls){
+            	namesOfMethodsCalled.add(m.getName());
+            }
+            for (MethodDeclaration md:methodDeclarations){
+            	namesOfMethodsDeclared.add(md.getName());
+            } 
+    	}
+    	// Check for overlaps to determine which methods will be changed
+    	for (String md: namesOfMethodsDeclared){
+    		for (String mc: namesOfMethodsCalled){
+    			if (mc.equals(md)){
+    				namesOfMethodsToModify.add(md);
+    			}
+    		}
+    	}
+        return namesOfMethodsToModify;
+    }
+    
+    private static void writeMethodDecChange(String inputFilePath, String tempFilePath, Set<String> namesOfMethodsToModify) throws ParseException, IOException{
     	FileInputStream in = new FileInputStream(inputFilePath);
         CompilationUnit cu;
         try {
@@ -76,13 +137,11 @@ public class ArgumentObfuscator {
             in.close();
         }
 
-        MethodCallVisitor mcv = new MethodCallVisitor();
-        
         List<MethodCallExpr> methodCalls = mcv.getMethodCalls(cu, null);
-        List<MethodDeclaration> methods = new MethodVisitor().getMethods(cu, null);
+        List<MethodDeclaration> methods = mdv.getMethods(cu, null);
         // Retrieve list of method calls to modify arguments
 //        List<MethodCallExpr> methodCallsToModify = getMethodCallsToModify(methods, methodCalls);
-        List[] methodsAndCallsToModify = getMethodsAndCallsToModify(methods, methodCalls);
+        List[] methodsAndCallsToModify = getMethodsAndCallsToModify(methods, methodCalls, namesOfMethodsToModify);
 		// Create method declaration and variable initialisation changes
         List<MethodDeclaration> methodList = methodsAndCallsToModify[1];
         // Initialise map of line number and expression
@@ -100,7 +159,7 @@ public class ArgumentObfuscator {
         	List<Parameter> paramList = new ArrayList<Parameter>();
         	paramList = m.getParameters();
 //        	System.out.println(paramList);
-        	//TODO: find out why the last one has an Ag parameter
+        	//TODO: find out why the last one has an Ag parameter and array parameter.
         	for (Parameter p: paramList){
         		// Check type counter to get index
         		// If there was already an existing parameter type then increment counter
@@ -140,7 +199,9 @@ public class ArgumentObfuscator {
         	// Print the statement the line after the method declaration
         	lineExpMap.put(m.getBeginLine()+1+m.getAnnotations().size(), statementString);
         }
+        
 		// Iterate through map, write to file
+        ObfuscationFileWriter obsFileWriter = new ObfuscationFileWriter();
 		obsFileWriter.WriteToFile(lineExpMap, inputFilePath, tempFilePath);
     }
     
@@ -153,7 +214,7 @@ public class ArgumentObfuscator {
     	return false;
     }
     
-    private static void writeAgInitialisers(String inputFilePath, String tempFilePath) throws ParseException, IOException{
+    private static void writeAgInitialisers(String inputFilePath, String tempFilePath, Set<String> namesOfMethodsToModify) throws ParseException, IOException{
     	FileInputStream in = new FileInputStream(inputFilePath);
         CompilationUnit cu;
         try {
@@ -162,15 +223,13 @@ public class ArgumentObfuscator {
         } finally {
             in.close();
         }
-        importList = cu.getImports();
-        MethodCallVisitor mcv = new MethodCallVisitor();
-        
+
         List<MethodCallExpr> methodCalls = mcv.getMethodCalls(cu, null);
-        List<MethodDeclaration> methods = new MethodVisitor().getMethods(cu, null);
+        List<MethodDeclaration> methods = mdv.getMethods(cu, null);
+//        System.out.println(methods.size());
         // Retrieve list of method calls to modify arguments
 //        List<MethodCallExpr> methodCallsToModify = getMethodCallsToModify(methods, methodCalls);
-        List[] methodsAndCallsToModify = getMethodsAndCallsToModify(methods, methodCalls);
-        
+        List[] methodsAndCallsToModify = getMethodsAndCallsToModify(methods, methodCalls, namesOfMethodsToModify);
         // Need this so it will work even if there's more than one method call in a single method
         int numberOfCalls = 0;
         // Initialise map of line number and expression
@@ -195,13 +254,14 @@ public class ArgumentObfuscator {
         
         // Sort the map by line number
 		lineExpMap = sortMap(lineExpMap);
-		
+		System.out.println(lineExpMap);
 		// Iterate through map, write to file
+		ObfuscationFileWriter obsFileWriter = new ObfuscationFileWriter();
 		obsFileWriter.WriteToFile(lineExpMap, inputFilePath, tempFilePath);
 
     }
     
-    private static void writeArgumentChange(String inputFilePath, String tempFilePath) throws IOException, ParseException{
+    private static void writeArgumentChange(String inputFilePath, String tempFilePath, Set<String> namesOfMethodsToModify) throws IOException, ParseException{
     	FileInputStream in = new FileInputStream(inputFilePath);
         CompilationUnit cu;
         try {
@@ -210,14 +270,11 @@ public class ArgumentObfuscator {
         } finally {
             in.close();
         }
-
-        MethodCallVisitor mcv = new MethodCallVisitor();
-        
+    
         List<MethodCallExpr> methodCalls = mcv.getMethodCalls(cu, null);
-        List<MethodDeclaration> methods = new MethodVisitor().getMethods(cu, null);
+        List<MethodDeclaration> methods = mdv.getMethods(cu, null);
         // Retrieve list of method calls to modify arguments
-//        List<MethodCallExpr> methodCallsToModify = getMethodCallsToModify(methods, methodCalls);
-        List[] methodsAndCallsToModify = getMethodsAndCallsToModify(methods, methodCalls);
+        List[] methodsAndCallsToModify = getMethodsAndCallsToModify(methods, methodCalls, namesOfMethodsToModify);
         
         // Need this so it will work even if there's more than one method call in a single method
         int numberOfCalls = 0;
@@ -251,7 +308,9 @@ public class ArgumentObfuscator {
         	// Replace method parameters with Ag x
         	m.setParameters(paramList);
         }
+        System.out.println(cu);
         // Write the compilation unit to a file
+        ObfuscationFileWriter obsFileWriter = new ObfuscationFileWriter();
         obsFileWriter.writeCuToFile(cu,inputFilePath,tempFilePath);
     }
     
@@ -300,60 +359,98 @@ public class ArgumentObfuscator {
      */
     private static class MethodCallVisitor extends VoidVisitorAdapter {
     	
-    	List<MethodCallExpr> methodCallList = new ArrayList<MethodCallExpr>();
+    	List<MethodCallExpr> methodCallList;
     	
     	public List<MethodCallExpr> getMethodCalls(CompilationUnit cu, Object arg){
+    		methodCallList = new ArrayList<MethodCallExpr>();
     		visit(cu, arg);
     		return methodCallList;
     	}
     	
         @Override
         public void visit(MethodCallExpr n, Object arg){
-    		//TODO: if it's a call to the superclass don't add it in
-        	methodCallList.add(n);
+    		//if it's a call to the superclass don't add it in
+        	if (n.getScope() != null){
+        		if (n.getScope().toString().equals("super")){
+        			return;
+        		}
+        	}
+			methodCallList.add(n);
         }
     }
     
     private static class MethodVisitor extends VoidVisitorAdapter {
     	
-    	List<MethodDeclaration> methodList = new ArrayList<MethodDeclaration>();
+    	List<MethodDeclaration> methodList;
     	
     	public List<MethodDeclaration> getMethods(CompilationUnit cu, Object arg){
+    		methodList = new ArrayList<MethodDeclaration>();
     		visit(cu,arg);
     		return methodList;
     	}
     	
     	@Override
     	public void visit(MethodDeclaration n, Object arg) {
-    		methodList.add(n);
-      }
+    		// if no parameters don't add it in
+    		// if has override annotation don't add it in
+    		if (!n.getParameters().isEmpty() && !hasOverrideAnnotation(n)){
+    			methodList.add(n);
+    		}
+    	}
+    	
+    	private static boolean hasOverrideAnnotation(MethodDeclaration n){
+    		List<AnnotationExpr> annos = n.getAnnotations();
+    		if (!annos.isEmpty()){
+    			for (AnnotationExpr an: annos){
+    				if (an.toString().equals("@Override")){
+    					return true;
+    				}
+    				return false;
+    			}
+    		}
+    		return false;
+    	}
     }
     
-    private static List[] getMethodsAndCallsToModify(List<MethodDeclaration> methods, List<MethodCallExpr> methodCalls){
+    private static List[] getMethodsAndCallsToModify(List<MethodDeclaration> methods, List<MethodCallExpr> methodCalls, Set<String> namesOfMethodsToModify){
         List<MethodCallExpr> methodCallsToModify = new ArrayList<MethodCallExpr>();
         List<MethodDeclaration> methodsToModify = new ArrayList<MethodDeclaration>();
-    	for (MethodCallExpr mc: methodCalls){
-    		for (MethodDeclaration m: methods){
-        		if (m.getName().equals(mc.getName())){
-        			// method call mc is in method m
-        			methodCallsToModify.add(mc);
-        			
-        			// Check for duplicates
-        			boolean listAlreadyHasMethod = false;
-            		for (MethodDeclaration md: methodsToModify){
-            			if (md.getName().equals(mc.getName())){
-            				listAlreadyHasMethod = true;
-            				break;
-            			}
-            		}
-            		if (!listAlreadyHasMethod){
-            			methodsToModify.add(m);
-            		}
-        			
+        for (String s: namesOfMethodsToModify){
+        	for (MethodDeclaration md: methods){
+        		if (md.getName().equals(s)){
+        			methodsToModify.add(md);
         		}
         	}
         }
+        for (String s: namesOfMethodsToModify){
+        	for (MethodCallExpr mc: methodCalls){
+        		if (mc.getName().equals(s)){
+        			methodCallsToModify.add(mc);
+        		}
+        	}
+        }
+		//Below is old code kept for reference - only checks if the method declaration is called in the same class
+//    	for (MethodCallExpr mc: methodCalls){
+//  		for (MethodDeclaration m: methods){
+//        		if (m.getName().equals(mc.getName())){
+//        			// method call mc is in method m
+//        			methodCallsToModify.add(mc);
+//        			
+//        			// Check for duplicates
+//        			boolean listAlreadyHasMethod = false;
+//            		for (MethodDeclaration md: methodsToModify){
+//            			if (md.getName().equals(mc.getName())){
+//            				listAlreadyHasMethod = true;
+//            				break;
+//            			}
+//            		}
+//            		if (!listAlreadyHasMethod){
+//            			methodsToModify.add(m);
+//            		}
+//        			
+//        		}
+//        	}
+//        }
         return new List[] {methodCallsToModify,methodsToModify};
     }
-    
 }
