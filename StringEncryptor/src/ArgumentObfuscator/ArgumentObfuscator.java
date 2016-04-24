@@ -46,21 +46,9 @@ public class ArgumentObfuscator {
 	private static List<Type> argTypes = new ArrayList<Type>();
 	private static MethodCallVisitor mcv = new MethodCallVisitor();
 	private static MethodVisitor mdv = new MethodVisitor();
-	
-    public static void main(String[] args) throws Exception {
-    	String inputFilePath = "C:/Users/alyssaong/Documents/eclipse workspace/overloadobfuscation/src/data/AchievementServiceCopy.java";
-    	// Replace this with user input directory
-    	String dirPath = "C:/Users/alyssaong/AndroidStudioProjects/geofencetasking/GeofenceTasker/app/src/main/java/com/app/gfour/geofencetasker" + "/";
-//    	String dirPath = "C:/Users/alyssaong/Documents/eclipse workspace/overloadobfuscation/src/test/";
-    	String classFilePath =  "C:/Users/alyssaong/Documents/eclipse workspace/overloadobfuscation/src/data/Ag.java";
-    	
-    	// Write class files for Ag
-    	// Gonna manually do this one so don't need
-    	writeChangesToClassFile(dirPath);
-    }
     
     /* Traverse through all the files and return list of names of methods that we will change*/
-    private static void writeChangesToClassFile(String dirPath) throws ParseException, IOException {
+    public static void ObfuscateArguments(String dirPath) throws ParseException, IOException {
     	FileWalker fw = new FileWalker();
     	List<String> javaFilePathsFound = new ArrayList<String>();
     	javaFilePathsFound = fw.getFilePathsFound(dirPath);
@@ -79,13 +67,6 @@ public class ArgumentObfuscator {
         	// Uses javaparser CU to write to file
         	writeArgumentChange(path, tempFilePath, namesOfMethodsToModify);
     	}
-//        CompilationUnit cu;
-//        try {
-//            // parse the file
-//            cu = JavaParser.parse(in);
-//        } finally {
-//            in.close();
-//        }
         
     }
     
@@ -141,10 +122,9 @@ public class ArgumentObfuscator {
 
         List<MethodCallExpr> methodCalls = mcv.getMethodCalls(cu, null);
         List<MethodDeclaration> methods = mdv.getMethods(cu, null);
-        // Retrieve list of method calls to modify arguments
-//        List<MethodCallExpr> methodCallsToModify = getMethodCallsToModify(methods, methodCalls);
+        // Retrieve list of methods and calls that we are going to change
         List[] methodsAndCallsToModify = getMethodsAndCallsToModify(methods, methodCalls, namesOfMethodsToModify);
-		// Create method declaration and variable initialisation changes
+		// Retrieve list of method declarations we are going to change
         List<MethodDeclaration> methodList = methodsAndCallsToModify[1];
         // Initialise map of line number and expression
         Map<Integer, String> lineExpMap = new HashMap<Integer, String>();
@@ -160,8 +140,6 @@ public class ArgumentObfuscator {
         	// Populate parameter list with method parameters
         	List<Parameter> paramList = new ArrayList<Parameter>();
         	paramList = m.getParameters();
-//        	System.out.println(paramList);
-        	//TODO: find out why the last one has an Ag parameter and array parameter.
         	int argCount = 0;
         	for (Parameter p: paramList){
         		/* OLD INDEX ASSIGNMENT*/
@@ -195,7 +173,6 @@ public class ArgumentObfuscator {
         		// Expression for the index of the method call
         		NameExpr argIndexExpr = new NameExpr(""+pm.getTypeCount());
         		List<Expression> argExprList = new ArrayList<Expression>();
-//        		argExprList.add(argNameExpr);
         		argExprList.add(argIndexExpr);
         		MethodCallExpr getVarExpr = new MethodCallExpr(varNameExpr, "getArg", argExprList);
         		// Cast the method call
@@ -233,22 +210,19 @@ public class ArgumentObfuscator {
             in.close();
         }
 
+        // Retrieve all methods and method calls in java file
         List<MethodCallExpr> methodCalls = mcv.getMethodCalls(cu, null);
         List<MethodDeclaration> methods = mdv.getMethods(cu, null);
-//        System.out.println(methods.size());
-        // Retrieve list of method calls to modify arguments
-//        List<MethodCallExpr> methodCallsToModify = getMethodCallsToModify(methods, methodCalls);
+        // Retrieve list of methods and method calls to change
         List[] methodsAndCallsToModify = getMethodsAndCallsToModify(methods, methodCalls, namesOfMethodsToModify);
         // Need this so it will work even if there's more than one method call in a single method
         int numberOfCalls = 0;
         // Initialise map of line number and expression
         Map<Integer, String> lineExpMap = new HashMap<Integer, String>();
-        // TODO: Change this to declare the argument at the start instead later
         for (MethodCallExpr mc: (List<MethodCallExpr>) methodsAndCallsToModify[0]){
         	if (mc.getArgs()==null){
         		continue;
         	}
-        	// TODO: Ignore those with scope of super if (scope){continue;} !! very important
         	// Initialise method call argument(s)
         	NameExpr nExpr = new NameExpr("ag" + numberOfCalls);
         	if (mc.getArgs() != null){
@@ -289,7 +263,6 @@ public class ArgumentObfuscator {
         // Initialise map of line number and expression
         Map<Integer, String> lineExpMap = new HashMap<Integer, String>();
         for (MethodCallExpr mc: (List<MethodCallExpr>) methodsAndCallsToModify[0]){
-        	// TODO: Ignore those with scope of super if (scope){continue;}
         	if (mc.getArgs()==null){
         		continue;
         	}
@@ -321,6 +294,7 @@ public class ArgumentObfuscator {
         obsFileWriter.writeCuToFile(cu,inputFilePath,tempFilePath);
     }
     
+    // Sort the line number to expression map by ascending line numbers
     private static Map<Integer, String> sortMap(Map<Integer, String> unsortedMap){
     	Map<Integer, String> sortedMap = new TreeMap<Integer, String>(
 				new Comparator<Integer>() {
@@ -335,6 +309,7 @@ public class ArgumentObfuscator {
 		return sortedMap;
     }
     
+    // Create a new variable initialisation creation node i.e. Ag x = new Ag();
     // Parameters: List of arguments and name of variable
     private static ExpressionStmt CreateNewObjectVariable(List<Expression> args, String varName){
         VariableDeclarator vd = new VariableDeclarator();
@@ -347,6 +322,7 @@ public class ArgumentObfuscator {
         for (Expression a:args){
             argExps.add(a);
         }
+        // Create a new object initialisation node i.e. x = new Ag();
         // Parameters: scope, class type, list of argument expressions
         ObjectCreationExpr objectCreationExp = new ObjectCreationExpr(null,variableType,argExps);
         vd.setId(variableName);
@@ -357,12 +333,11 @@ public class ArgumentObfuscator {
         // Create variable declaration line
         VariableDeclarationExpr vde = new VariableDeclarationExpr(variableType,vdl);
         ExpressionStmt vexpr = new ExpressionStmt(vde);
-//        System.out.println(vexpr.getChildrenNodes());
         return vexpr;
     }
 
     /**
-     * Simple visitor implementation for visiting MethodCall nodes.
+     * Simple visitor implementation for visiting method call nodes.
      */
     private static class MethodCallVisitor extends VoidVisitorAdapter {
     	
@@ -386,6 +361,9 @@ public class ArgumentObfuscator {
         }
     }
     
+    /**
+     * Simple visitor implementation for visiting method declaration nodes.
+     */
     private static class MethodVisitor extends VoidVisitorAdapter {
     	
     	List<MethodDeclaration> methodList;
@@ -419,45 +397,31 @@ public class ArgumentObfuscator {
     	}
     }
     
+    /* Get target list of method declarations and calls that we want to change
+     Only include overlapping method declarations and calls
+     Exclude calls that have super scope and those that have no arguments*/
     private static List[] getMethodsAndCallsToModify(List<MethodDeclaration> methods, List<MethodCallExpr> methodCalls, Set<String> namesOfMethodsToModify){
         List<MethodCallExpr> methodCallsToModify = new ArrayList<MethodCallExpr>();
         List<MethodDeclaration> methodsToModify = new ArrayList<MethodDeclaration>();
         for (String s: namesOfMethodsToModify){
         	for (MethodDeclaration md: methods){
+        		// Check for overlapping names
         		if (md.getName().equals(s)){
+        			// Add to method declaration target list
         			methodsToModify.add(md);
         		}
         	}
         }
         for (String s: namesOfMethodsToModify){
         	for (MethodCallExpr mc: methodCalls){
+        		// Check for overlapping names
         		if (mc.getName().equals(s)){
+        			// Add to method call target list
         			methodCallsToModify.add(mc);
         		}
         	}
         }
-		//Below is old code kept for reference - only checks if the method declaration is called in the same class
-//    	for (MethodCallExpr mc: methodCalls){
-//  		for (MethodDeclaration m: methods){
-//        		if (m.getName().equals(mc.getName())){
-//        			// method call mc is in method m
-//        			methodCallsToModify.add(mc);
-//        			
-//        			// Check for duplicates
-//        			boolean listAlreadyHasMethod = false;
-//            		for (MethodDeclaration md: methodsToModify){
-//            			if (md.getName().equals(mc.getName())){
-//            				listAlreadyHasMethod = true;
-//            				break;
-//            			}
-//            		}
-//            		if (!listAlreadyHasMethod){
-//            			methodsToModify.add(m);
-//            		}
-//        			
-//        		}
-//        	}
-//        }
+        // Return both target lists of method declarations and method calls
         return new List[] {methodCallsToModify,methodsToModify};
     }
 }

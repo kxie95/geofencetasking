@@ -8,6 +8,8 @@ import java.util.List;
 
 import org.apache.commons.io.FileUtils;
 
+import ArgumentObfuscator.ArgumentObfuscator;
+
 import java.awt.*;
 import java.awt.event.*;
 import java.io.File;
@@ -163,6 +165,7 @@ class ObfuscatorWorker extends SwingWorker<Void, String> {
 			FileUtils.copyDirectory(srcDir, destDir);
 
 			publish("Obfuscating...");
+			ArgumentObfuscator.ObfuscateArguments(destDir.getAbsolutePath() + "\\app\\src\\main\\java");
 			RoundAboutEncryption.Obfuscate(destDir.getAbsolutePath() + "\\app\\src\\main\\java");
 
 		} catch (Exception e) {
