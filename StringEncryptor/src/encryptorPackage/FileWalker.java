@@ -31,6 +31,7 @@ public class FileWalker {
 
 					// Apply replacer to the java class
 					StringReplacer.Replace(f, keyString);
+					TryCatchReplacer.Replace(f);
 				}
 			}
 		}
