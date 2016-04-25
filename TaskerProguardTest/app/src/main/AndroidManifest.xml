@@ -10,6 +10,7 @@
         android:label="Tasker"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
+        <activity android:name="anotherPackage.TasksActivity"/>
         <activity
             android:name=".tasks.TasksActivity"
             android:label="Tasker"

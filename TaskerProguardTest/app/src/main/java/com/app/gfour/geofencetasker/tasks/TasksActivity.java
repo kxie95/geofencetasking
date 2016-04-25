@@ -47,6 +47,9 @@ public class TasksActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+        TasksActivity ta = new TasksActivity();
+        anotherPackage.TasksActivity taa = new anotherPackage.TasksActivity();
+        com.app.gfour.geofencetasker.newtask.TasksActivity tab = new com.app.gfour.geofencetasker.newtask.TasksActivity();
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.btnAddItem);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override

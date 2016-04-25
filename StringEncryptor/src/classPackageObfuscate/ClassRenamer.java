@@ -1,7 +1,11 @@
 package classPackageObfuscate;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.math.BigInteger;
@@ -17,6 +21,8 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Scanner;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -55,6 +61,7 @@ public class ClassRenamer {
 	
 	// Name of the top level package.
 	String packageName = "";
+	
 	// Names of components found in the manifest.
 	Map<String, String> componentNames;
 	
@@ -106,24 +113,125 @@ public class ClassRenamer {
 			if (f.isDirectory()) {
 				walkThroughFiles(f.getAbsolutePath());
 			} else { // Else, it's a java file.
-				System.out.println(f.getName());
-				replaceReferencesInFile(f);
+				readFileAndReplace(f);
 			}
 		}
 		
 	}
+	
+	private void readFileAndReplace(File file) {
+		String absolutePath = file.getAbsolutePath();
+		
+		// For imports relevant to this file.
+		Map<String, String> imports = new HashMap<String, String>();
+		
+		// Full class declaration of this file.
+		String fullDeclaration = getDeclaredNameFromAbsolutePath(absolutePath);
+		
+		// Check if it's a component.
+		boolean isComponent = isComponent(absolutePath);
+		if (isComponent) {
+			System.out.println(file.getName() + " is a component.");
+			imports.put(getClassNameFromPackage(fullDeclaration), 
+					getClassNameFromPackage(componentNames.get(fullDeclaration)));
+			System.out.println(getClassNameFromPackage(fullDeclaration) 
+					+ " " + getClassNameFromPackage(componentNames.get(fullDeclaration)));
+		}
+		
+		// Read the file.
+		try {
+			FileReader fr = new FileReader(file);
+			BufferedReader br = new BufferedReader(fr);
+
+			StringBuilder sb = new StringBuilder();
+			String line;
+			while ((line = br.readLine()) != null) {
+				for (String componentName : componentNames.keySet()) {
+					String className = getClassNameFromPackage(componentName);
+					if (line.contains(componentName)) {
+						line = line.replace(componentName, componentNames.get(componentName));
+						break;
+					}
+					if (line.contains(className)){
+						line = line.replace(className, getClassNameFromPackage(componentNames.get(componentName)));
+					}
+				}
+				
+				// Can remove \n to make it less readable
+				sb.append(line + "\n");
+
+			}
+			//System.out.println(sb.toString());
+//
+//			BufferedWriter bw = null;
+//			FileWriter fw = null;
+//			
+//			try {
+//				fw = new FileWriter(file, false);
+//				bw = new BufferedWriter(fw);
+//
+//				bw.write(sb.toString());
+//				br.close();
+//
+//			} catch (FileNotFoundException e) {
+//				System.out.println("File was not found!");
+//			} catch (IOException e) {
+//				System.out.println("No file found!");
+//			} finally {
+//				bw.close();
+//			}
+		} catch (FileNotFoundException e) {
+			System.out.println("Error1!");
+		} catch (IOException e) {
+			System.out.println("Error2!");
+		}
+	}
 
 	/**
-	 * Replaces references of components in the componentName hash map with its randomly generated key.
-	 * Does not handle duplicate class names.
-	 * @param file
-	 * @throws IOException 
+	 * Checks if a file is an Android component.
+	 * @param absolutePath of the file.
+	 * @return true if the component is an Android component.
 	 */
-	private void replaceReferencesInFile(File file) throws IOException {
-	    // First check import statements to see which classes it contains.
-		// Add these to a hashset? 
-	}	
+	private boolean isComponent(String absolutePath) {
+		return componentNames.containsKey(getDeclaredNameFromAbsolutePath(absolutePath));
+	}
+	
+	/**
+	 * Gets the class name from a package declaration separated by dots.
+	 * @param fullDeclaration of the class
+	 * @return String of the class name
+	 */
+	private String getClassNameFromPackage(String fullDeclaration) {
+		return fullDeclaration.substring(fullDeclaration.lastIndexOf(".") + 1);
+	}
+	
+	/**
+	 * Finds the declared name in dot format from an absolute path.
+	 * @param absolutePath of the Java file.
+	 * @return String of the declared name in separated by dots.
+	 */
+	private String getDeclaredNameFromAbsolutePath(String absolutePath) {
+		int indexOfPkgFolder = absolutePath.indexOf("\\main\\java");
+		if (indexOfPkgFolder == -1) {
+			indexOfPkgFolder = absolutePath.indexOf("/main/java");
+		}
+		indexOfPkgFolder += 11; // To get the root package folder within the java folder.
+		String declaredName = absolutePath.substring(indexOfPkgFolder);
+		
+		// Replace both in case of OS differences.
+		declaredName = declaredName.replace("/", "."); 
+		declaredName = declaredName.replace("\\", ".");
+		declaredName = declaredName.replace(".java", "");
+		
+		return declaredName;
+	}
 
+	/**
+	 * Puts names of Android components as keys from an AndroidManifest.xml file 
+	 * and generates a random value for the class name.
+	 * @param xmlDoc
+	 * @return Map of the Android components
+	 */
 	private Map<String, String> getComponentNames(Document xmlDoc) {
 		Map<String, String> componentNames = new HashMap<String, String>();
 		
@@ -139,10 +247,11 @@ public class ClassRenamer {
 			for (int i = 0; i < nl.getLength(); i++) {
 				NamedNodeMap attributes = nl.item(i).getAttributes();
 				String nameValue = attributes.getNamedItem("android:name").getNodeValue();
+				String pkg = nameValue.substring(0, nameValue.lastIndexOf("."));
 				if (nameValue.startsWith(".")) {
-					componentNames.put(packageName + nameValue, generateRandomName());
+					componentNames.put(packageName + nameValue, packageName + pkg + "." + generateRandomName());
 				} else {
-					componentNames.put(nameValue, generateRandomName());
+					componentNames.put(nameValue, pkg + "." + generateRandomName());
 				}
 			}
 		}

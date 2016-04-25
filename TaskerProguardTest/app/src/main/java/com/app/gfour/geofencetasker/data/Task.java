@@ -1,5 +1,6 @@
 package com.app.gfour.geofencetasker.data;
 
+import anotherPackage.TasksActivity;
 /**
  * Bean class representing a task.
  */
@@ -8,8 +9,10 @@ public class Task {
     private String title;
     private String address;
 
-    public Task(){}
-
+    public Task() {
+        TasksActivity ta = new TasksActivity();
+        com.app.gfour.geofencetasker.newtask.TasksActivity ta = new com.app.gfour.geofencetasker.newtask.TasksActivity();
+    }
     public Task(String title, String address) {
         super();
         this.title = title;
