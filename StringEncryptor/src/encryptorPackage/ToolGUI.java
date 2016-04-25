@@ -13,7 +13,6 @@ import ArgumentObfuscator.ArgumentObfuscator;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.File;
-import java.io.IOException;
 
 //Main class
 public class ToolGUI {

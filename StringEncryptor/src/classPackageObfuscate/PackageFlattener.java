@@ -8,11 +8,7 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -25,76 +21,90 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
 import org.w3c.dom.Document;
-import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 public class PackageFlattener {
 
+	// Package tracking
 	public static HashMap<String, Integer> packageList = new HashMap<String, Integer>();
 	public static String packageRoot = "";
+
+	// Reader/Writer components
 	private static String line = "";
 	private static FileReader fr;
 	private static BufferedReader br;
 	private static FileWriter fw;
 	private static BufferedWriter bw;
 
+	/** Method which moves the .Java files to the xyz package */
 	public static void MoveJavaFile(String path, File f) {
 		try {
-
 			if (f.renameTo(new File(path + "\\xyz\\" + f.getName()))) {
-				System.out.println("File is moved successful!");
+				// System.out.println("File is moved successful!");
 			} else {
-				System.out.println("File is failed to move! " + path + "\\xyz\\" + f.getName());
+				// System.out.println("File is failed to move! " + path +
+				// "\\xyz\\" + f.getName());
 			}
-
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
 		}
 	}
 
+	/** Method which fixes up the Manifest file after moving the .java files */
 	public static void ManifestFixer(String path) {
 		try {
-			System.out.println("BEFORE");
+			// Read the Manifest.xml file as an XML
 			File manifestFile = new File(path + "\\AndroidManifest.xml");
+
 			DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
-			DocumentBuilder dBuilder;
-			System.out.println("AFTER");
-			dBuilder = dbFactory.newDocumentBuilder();
+			DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
 
 			Document doc = dBuilder.parse(manifestFile);
 			doc.getDocumentElement().normalize();
 
+			// Record the original package name
 			packageRoot = doc.getDocumentElement().getAttribute("package");
-			doc.getDocumentElement().setAttribute("package", "xyz");
-			NodeList applicationTag = doc.getDocumentElement().getElementsByTagName("application");
 
+			// Rename the package name
+			doc.getDocumentElement().setAttribute("package", "xyz");
+
+			// Get the "application" tags
+			NodeList applicationTag = doc.getDocumentElement().getElementsByTagName("application");
 			NodeList applicationChildren = applicationTag.item(0).getChildNodes();
 
+			// If the tags are activity, service, provider or receiver then fix
+			// the package reference
 			for (int x = 0; x < applicationChildren.getLength(); x++) {
 				if (applicationChildren.item(x).getNodeName().equals("activity")
 						|| applicationChildren.item(x).getNodeName().equals("service")
 						|| applicationChildren.item(x).getNodeName().equals("provider")
 						|| applicationChildren.item(x).getNodeName().equals("receiver")) {
+
+					// Remove old package reference from "android:name"
 					String oldAndroidName = applicationChildren.item(x).getAttributes().getNamedItem("android:name")
 							.toString();
 					String oldSection = oldAndroidName.substring(0, oldAndroidName.lastIndexOf("."));
 					String newAndroidName = oldAndroidName.replace(oldSection, "");
-					newAndroidName = newAndroidName.substring(0, newAndroidName.length()-1);
-					System.out.println(newAndroidName);
+					newAndroidName = newAndroidName.substring(0, newAndroidName.length() - 1);
+
+					// Debug
+					// System.out.println(newAndroidName);
+
+					// Set the new "android:name" with the updated value
 					applicationChildren.item(x).getAttributes().getNamedItem("android:name")
 							.setNodeValue(newAndroidName);
 				}
-
 			}
 
+			// Build an xml writer
 			Transformer tr = TransformerFactory.newInstance().newTransformer();
 			tr.setOutputProperty(OutputKeys.INDENT, "yes");
 			tr.setOutputProperty(OutputKeys.METHOD, "xml");
 			tr.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
 			tr.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "4");
 
-			// send DOM to file
+			// Write the updated xml file to the new location
 			tr.transform(new DOMSource(doc), new StreamResult(new FileOutputStream(path + "\\AndroidManifest.xml")));
 
 		} catch (ParserConfigurationException | SAXException | IOException | TransformerException e) {
@@ -104,16 +114,19 @@ public class PackageFlattener {
 
 	}
 
+	/** This fixes the package references in all the java files */
 	public static void PackageFixer(String path) {
 
 		File root = new File(path);
 		File[] list = root.listFiles();
-		
-		System.out.println(packageList.keySet());
-		for(String pkg : packageList.keySet()){
-			System.out.println(pkg);
-		}
-		
+
+		// Debug package list
+		// System.out.println(packageList.keySet());
+		// for (String pkg : packageList.keySet()) {
+		// System.out.println(pkg);
+		// }
+
+		// Iterate all the java files
 		for (File f : list) {
 
 			try {
@@ -123,18 +136,18 @@ public class PackageFlattener {
 				StringBuffer sb = new StringBuffer();
 				while ((line = br.readLine()) != null) {
 
-					
-					for(String pkg : packageList.keySet()){
-						if(line.contains(pkg)) {
+					// If line contains a package reference, rename it
+					for (String pkg : packageList.keySet()) {
+						if (line.contains(pkg)) {
 							line = line.replace(pkg, "xyz");
 						}
 					}
-					if(line.contains(packageRoot)) {
+
+					// If line contains a package root reference, rename it
+					if (line.contains(packageRoot)) {
 						line = line.replace(packageRoot, "xyz");
 					}
-					
 					sb.append(line + "\n");
-
 				}
 
 				try {
