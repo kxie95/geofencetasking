@@ -42,7 +42,7 @@ public class ToolGUI {
 
 		// Create the frame
 		frame1 = new JFrame("SE 702 Obfuscation Tool");
-		frame1.setSize(600, 200);
+		frame1.setSize(1000, 200);
 		frame1.setResizable(false);
 		pane = frame1.getContentPane();
 		insets = pane.getInsets();
@@ -100,8 +100,8 @@ public class ToolGUI {
 		pane.add(runButton);
 
 		// Chester DEBUG TODO REMOVE
-		inputLocationAddress.setText("D:\\AndroidProjects\\geofencetasking\\GeofenceTasker");
-		outputLocationAddress.setText("D:\\Users\\Chester\\Desktop\\OneTime");
+//		inputLocationAddress.setText("D:\\AndroidProjects\\geofencetasking\\GeofenceTasker");
+//		outputLocationAddress.setText("D:\\Users\\Chester\\Desktop\\OneTime");
 		
 		// Set frame visible
 		frame1.setVisible(true);

@@ -56,8 +56,12 @@ public class FileWalker {
 					// Rename Android components.
 					ClassRenamer.readFileAndReplace(f);
 
+					// Rename .java file if it's an Android component.
+					File newFile = ClassRenamer.renameFile(f);
+					
 					// Move packages to one location
-					PackageFlattener.MoveJavaFile(startingPath, f);
+					PackageFlattener.MoveJavaFile(startingPath, newFile);
+					
 				}
 			}
 		}

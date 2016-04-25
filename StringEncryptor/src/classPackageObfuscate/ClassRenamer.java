@@ -35,14 +35,11 @@ import org.xml.sax.SAXException;
 
 /**
  * Class which renames classes which extend of Android components. These include
- * Activity, Service, IntentService, BroadcastReceiver and ContentProvider.
+ * Activity, Service, BroadcastReceiver and ContentProvider.
  */
 public class ClassRenamer {
 	// Relative path to AndroidManifest file.
 	private static final String PATH_TO_MANIFEST = "\\app\\src\\main\\AndroidManifest.xml";
-
-	// Relative path to java src code.
-	private static final String PATH_TO_SRC = "\\app\\src\\main\\java";
 
 	// Set with list of possible Android components
 	private static Set<String> androidComponents = new HashSet<String>();
@@ -55,8 +52,6 @@ public class ClassRenamer {
 
 	// Names of components found in the manifest.
 	static Map<String, String> componentNames;
-
-	private static String rootDir;
 
 	/**
 	 * Renames Android component classes and their references to a random
@@ -82,9 +77,6 @@ public class ClassRenamer {
 
 			// Get the Android components to be renamed.
 			componentNames = getComponentNames(xmlDoc, file.getAbsolutePath() + PATH_TO_MANIFEST);
-			for (String s : componentNames.keySet()) {
-				System.out.println(s + " " + componentNames.get(s));
-			}
 
 		} catch (ParserConfigurationException pce) {
 			pce.printStackTrace();
@@ -97,31 +89,6 @@ public class ClassRenamer {
 		}
 
 	}
-
-	/**
-	 * Recursively looks through all the files in a given path.
-	 * 
-	 * @param srcPath
-	 *            Root of the path to start looking for files from.
-	 * @throws IOException
-	 * @throws SAXException
-	 * @throws ParserConfigurationException
-	 * @throws TransformerException
-	 */
-//	private void walkThroughFiles(String srcPath)
-//			throws IOException, TransformerException, ParserConfigurationException, SAXException {
-//		File dir = new File(srcPath);
-//		File[] files = dir.listFiles();
-//		for (File f : files) {
-//			// Keep looking if is directory.
-//			if (f.isDirectory()) {
-//				walkThroughFiles(f.getAbsolutePath());
-//			} else { // Else, it's a java file.
-//				readFileAndReplace(f);
-//			}
-//		}
-//
-//	}
 
 	/**
 	 * Replaces class names which are components with obfuscated names.
@@ -170,22 +137,20 @@ public class ClassRenamer {
 					}
 				}
 			}
-			System.out.println("---------");
-			System.out.println(absolutePath);
-			printMap(imports);
-			System.out.println("---------");
 
-			System.out.println("REPLACING FULLY DECLARED");
+			// Replace names in the file which are fully declared.
 			replaceFullyDeclaredNames(file);
 
+			// Replace the class name if the file is an Android component.
 			if (isComponent) {
-				System.out.println("REPLACING CLASS NAME");
 				replaceClassName(className, obfuscatedClassName, file);
 			}
 
+			// Replaces declared Android component imports.
 			if (!imports.isEmpty()) {
 				replaceImports(imports, file);
 			}
+			
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -308,15 +273,7 @@ public class ClassRenamer {
 	 * @return true if the component is an Android component.
 	 */
 	private static boolean isComponent(String absolutePath) {
-		try {
-		boolean k = componentNames.containsKey(getDeclaredNameFromAbsolutePath(absolutePath));
-		System.out.println(k);
-		return k;
-		}
-		catch(Exception e){
-		e.printStackTrace();	
-		}
-		return true;
+		return componentNames.containsKey(getDeclaredNameFromAbsolutePath(absolutePath));
 	}
 
 	/**
@@ -351,8 +308,6 @@ public class ClassRenamer {
 		declaredName = declaredName.replace("\\", ".");
 		declaredName = declaredName.replace(".java", "");
 		
-		System.out.println(declaredName);
-
 		return declaredName;
 	}
 
@@ -458,21 +413,6 @@ public class ClassRenamer {
 	}
 
 	/**
-	 * Method which checks a java file to see if it is an Android component.
-	 * 
-	 * @return true if the file is an Android component.
-	 */
-	private static boolean isAndroidComponent(File file) {
-
-		// Use regex to find extending class as a string.
-		String extendingClass = "";
-		if (androidComponents.contains(extendingClass)) {
-			return true;
-		}
-		return false;
-	}
-
-	/**
 	 * Adds Android components to a hash set as Strings.
 	 */
 	private static void addComponents() {
@@ -481,15 +421,31 @@ public class ClassRenamer {
 		androidComponents.add("provider");
 		androidComponents.add("receiver");
 	}
-
+	
 	/**
-	 * Convenience method for printing the contents of a map.
-	 * 
-	 * @param map
+	 * Renames a file to the obfuscated name if it's an android component.
+	 * @param f
 	 */
-	private static void printMap(Map<String, String> map) {
-		for (String key : map.keySet()) {
-			System.out.println(key + " " + map.get(key));
+	public static File renameFile(File f) {
+		if (!isComponent(f.getAbsolutePath())) {
+			return f;
 		}
+		
+		// Get the declared name from the file's absolute path.
+		String declaredName = getDeclaredNameFromAbsolutePath(f.getAbsolutePath());	
+		
+		// Get its corresponding obfuscated name from the HashMap.
+		String obfuscatedName = getClassNameFromPackage(componentNames.get(declaredName));
+		
+		// Extract the file name without its extension. 
+		String fileName = f.getName();
+		fileName = fileName.replace(".java", "");
+		
+		// Get the absolute path of the obfuscated file and rename the current file to it.
+		String obfuscatedPathName = f.getAbsolutePath().replace(fileName, obfuscatedName);
+		File file = new File(obfuscatedPathName);
+		f.renameTo(file);
+		
+		return file;
 	}
 }

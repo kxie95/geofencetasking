@@ -200,7 +200,7 @@ public class RoundAboutEncryption {
 		// Apply Package Obfuscation fixes
 		PackageFlattener.ManifestFixer(copiedFileLocation);
 		PackageFlattener.PackageFixer(copiedFileLocation + "\\java\\xyz");
-		PackageFlattener.CleanUpOldPackages(copiedFileLocation + "\\java");
+		//PackageFlattener.CleanUpOldPackages(copiedFileLocation + "\\java");
 	}
 
 }

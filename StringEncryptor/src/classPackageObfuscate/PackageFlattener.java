@@ -127,8 +127,7 @@ public class PackageFlattener {
 		// }
 
 		// Iterate all the java files
-		for (File f : list) {
-
+		for (File f : list) {			
 			try {
 				fr = new FileReader(f);
 				br = new BufferedReader(fr);
