@@ -66,9 +66,10 @@ public class TryCatchReplacer {
 
 			bw.close();
 		} catch (FileNotFoundException e) {
-			System.out.println("Error1!");
+			System.out.println(e.getMessage());
+			System.out.println("Try - Error1!");
 		} catch (IOException e) {
-			System.out.println("Error2!");
+			System.out.println("Try - Error2!");
 		}
 	}
 

@@ -48,12 +48,12 @@ public class FileWalker {
 
 					// Encrypt strings
 					StringReplacer.Replace(f, keyString);
+					
+					// Swap if-else statements with try-catch
+					TryCatchReplacer.Replace(f);
 
 					// Move packages to one location
 					PackageFlattener.MoveJavaFile(startingPath, f);
-
-					// Swap if-else statements with try-catch
-					TryCatchReplacer.Replace(f);
 				}
 			}
 		}

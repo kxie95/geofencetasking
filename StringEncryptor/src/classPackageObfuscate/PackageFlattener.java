@@ -20,6 +20,7 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
+import org.apache.commons.io.FileUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
@@ -158,15 +159,15 @@ public class PackageFlattener {
 					br.close();
 
 				} catch (FileNotFoundException e) {
-					System.out.println("File was not found!");
+					System.out.println("Flat - File was not found!");
 				} catch (IOException e) {
-					System.out.println("No file found!");
+					System.out.println("Flat - No file found!");
 				}
 				bw.close();
 			} catch (FileNotFoundException e) {
-				System.out.println("Error1!");
+				System.out.println("Flat - Error1!");
 			} catch (IOException e) {
-				System.out.println("Error2!");
+				System.out.println("Flat - Error2!");
 			}
 		}
 	}
@@ -177,7 +178,12 @@ public class PackageFlattener {
 		File[] list = root.listFiles();
 		for (File f : list) {
 			if (f.isDirectory() && !f.getName().equals("xyz")) {
-				f.delete();
+				try {
+					FileUtils.deleteDirectory(f);
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 			}
 		}
 	}
