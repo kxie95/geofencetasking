@@ -21,6 +21,7 @@ import com.app.gfour.geofencetasker.R;
 import com.app.gfour.geofencetasker.data.AchievementService;
 import com.app.gfour.geofencetasker.data.Task;
 import com.app.gfour.geofencetasker.data.TaskHelper;
+import com.app.gfour.geofencetasker.data.Ag;
 import com.app.gfour.geofencetasker.newtask.NewTaskActivity;
 
 import java.util.ArrayList;

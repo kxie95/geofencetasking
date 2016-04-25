@@ -8,10 +8,12 @@ import java.util.List;
 
 import org.apache.commons.io.FileUtils;
 
+import ArgumentObfuscator.ArgumentObfuscator;
+import classPackageObfuscate.ClassRenamer;
+
 import java.awt.*;
 import java.awt.event.*;
 import java.io.File;
-import java.io.IOException;
 
 //Main class
 public class ToolGUI {
@@ -141,6 +143,7 @@ public class ToolGUI {
 
 }
 
+
 /**
  * Class to start obfuscation work in the background.
  */
@@ -166,7 +169,12 @@ class ObfuscatorWorker extends SwingWorker<Void, String> {
 			FileUtils.copyDirectory(srcDir, destDir);
 
 			publish("Obfuscating...");
-			RoundAboutEncryption.Obfuscate(destDir.getAbsolutePath() + "\\app\\src\\main\\java");
+
+			ClassRenamer cr = new ClassRenamer();
+			cr.renameClassesInXML(destDir.getAbsolutePath());
+			
+			RoundAboutEncryption.Obfuscate(destDir.getAbsolutePath() + "\\app\\src\\main");
+			ArgumentObfuscator.ObfuscateArguments(destDir.getAbsolutePath() + "\\app\\src\\main\\java");
 
 		} catch (Exception e) {
 			errorFlag = true;
@@ -191,6 +199,5 @@ class ObfuscatorWorker extends SwingWorker<Void, String> {
 			userMessage.setText("ERROR!");
 			errorFlag = false;
 		}
-
 	}
 }

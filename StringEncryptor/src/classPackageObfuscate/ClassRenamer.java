@@ -42,17 +42,6 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
-class Start {
-	public static void main(String[] args) {
-		ClassRenamer cr = new ClassRenamer("C:\\Users\\karen\\Desktop\\Android Studio Projects\\groupfour\\TaskerProguardTest");
-		try {
-			cr.renameClasses();
-		} catch (TransformerException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
-}
 /**
  * Class which renames classes which extend of Android components.
  * These include Activity, Service, IntentService, BroadcastReceiver
@@ -79,16 +68,12 @@ public class ClassRenamer {
 	
 	private String rootDir;
 	
-	public ClassRenamer(String rootDir) {
-		this.rootDir = rootDir;
-	}
-	
 	/**
 	 * Renames Android component classes and their references to a random String.
 	 * @param rootDir Path of the root directory of the project.
 	 * @throws TransformerException 
 	 */
-	public void renameClasses() throws TransformerException {
+	public void renameClassesInXML(String rootDir) {
 		// Add possible Android components to a hashset to be used to find elements in the XML.
 		addComponents();
 		
@@ -106,15 +91,14 @@ public class ClassRenamer {
 				System.out.println(s + " " + componentNames.get(s));
 			}
 			
-			// Walk through files and rename.
-			walkThroughFiles(rootDir + PATH_TO_SRC);
-			
 		} catch (ParserConfigurationException pce) {
 			pce.printStackTrace();
 		} catch (SAXException saxe) {
 			saxe.printStackTrace();
 		} catch (IOException ioe) {
 			ioe.printStackTrace();
+		} catch (TransformerException e) {
+			e.printStackTrace();
 		}
 		
 	}
@@ -149,7 +133,7 @@ public class ClassRenamer {
 	 * @throws ParserConfigurationException 
 	 * @throws TransformerException 
 	 */
-	private void readFileAndReplace(File file) throws IOException, TransformerException, ParserConfigurationException, SAXException {
+	public void readFileAndReplace(File file) {
 		String absolutePath = file.getAbsolutePath();
 		
 		// Check if the file is a component.
@@ -170,37 +154,41 @@ public class ClassRenamer {
 			obfuscatedClassName = getClassNameFromPackage(componentNames.get(fullDeclaration));
 		}
 		
-		// Read file as a string.
-		String fileString = FileUtils.readFileToString(file);
-		
-		// Get imports part of file.
-		String importsInFile = fileString.substring(0, fileString.indexOf("{"));
-		for (String line : importsInFile.split("\n")) {
-			// Get imports that are components.
-			if (line.startsWith("import")) {
-				for (String component : componentNames.keySet()) {
-					if (line.contains(component)) {
-						imports.put(getClassNameFromPackage(component), 
-								getClassNameFromPackage(componentNames.get(component)));
+		try {
+			// Read file as a string.
+			String fileString = FileUtils.readFileToString(file);
+			
+			// Get imports part of file.
+			String importsInFile = fileString.substring(0, fileString.indexOf("{"));
+			for (String line : importsInFile.split("\n")) {
+				// Get imports that are components.
+				if (line.startsWith("import")) {
+					for (String component : componentNames.keySet()) {
+						if (line.contains(component)) {
+							imports.put(getClassNameFromPackage(component), 
+									getClassNameFromPackage(componentNames.get(component)));
+						}
 					}
 				}
 			}
-		}
-		System.out.println("---------");
-		System.out.println(absolutePath);
-		printMap(imports);
-		System.out.println("---------");
-		
-		System.out.println("REPLACING FULLY DECLARED");
-		replaceFullyDeclaredNames(file);
-		
-		if (isComponent) {
-			System.out.println("REPLACING CLASS NAME");
-			replaceClassName(className, obfuscatedClassName, new File("C:\\Users\\karen\\Desktop\\Obfuscated stuff\\abc.java"));
-		}
-		
-		if (!imports.isEmpty()) {
-			replaceImports(imports, new File("C:\\Users\\karen\\Desktop\\Obfuscated stuff\\abc.java"));
+			System.out.println("---------");
+			System.out.println(absolutePath);
+			printMap(imports);
+			System.out.println("---------");
+			
+			System.out.println("REPLACING FULLY DECLARED");
+			replaceFullyDeclaredNames(file);
+			
+			if (isComponent) {
+				System.out.println("REPLACING CLASS NAME");
+				replaceClassName(className, obfuscatedClassName, new File("C:\\Users\\karen\\Desktop\\Obfuscated stuff\\abc.java"));
+			}
+			
+			if (!imports.isEmpty()) {
+				replaceImports(imports, new File("C:\\Users\\karen\\Desktop\\Obfuscated stuff\\abc.java"));
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
 	}
 

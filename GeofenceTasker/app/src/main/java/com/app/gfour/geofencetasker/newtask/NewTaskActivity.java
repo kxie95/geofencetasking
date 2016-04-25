@@ -17,6 +17,7 @@ import com.app.gfour.geofencetasker.R;
 import com.app.gfour.geofencetasker.data.GeofenceIntentService;
 import com.app.gfour.geofencetasker.data.Task;
 import com.app.gfour.geofencetasker.data.TaskHelper;
+import com.app.gfour.geofencetasker.data.Ag;
 import com.app.gfour.geofencetasker.tasks.TasksActivity;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -75,8 +76,7 @@ public class NewTaskActivity extends AppCompatActivity
         mSupportPlaceFragment = (SupportPlaceAutocompleteFragment)
                 getSupportFragmentManager().findFragmentById(R.id.place_autocomplete_fragment);
 
-        // Add listeners
-        mDoneButton.setOnClickListener(new View.OnClickListener() {
+        View.OnClickListener doneBtnListener = new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (mSelectedAddress == null) {
@@ -96,7 +96,10 @@ public class NewTaskActivity extends AppCompatActivity
                     }
                 }
             }
-        });
+        };
+
+        // Add listeners
+        mDoneButton.setOnClickListener(doneBtnListener);
 
         mSupportPlaceFragment.setOnPlaceSelectedListener(new PlaceSelectionListener() {
             @Override
