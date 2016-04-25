@@ -176,7 +176,7 @@ class ObfuscatorWorker extends SwingWorker<Void, String> {
 
 			ClassRenamer.renameClassesInXML(destDir.getAbsolutePath());
 			
-			RoundAboutEncryption.Obfuscate(destDir.getAbsolutePath() + "\\app\\src\\main");
+			ObfuscationCoordinator.Obfuscate(destDir.getAbsolutePath() + "\\app\\src\\main");
 			ArgumentObfuscator.ObfuscateArguments(destDir.getAbsolutePath() + "\\app\\src\\main\\java");
 
 		} catch (Exception e) {

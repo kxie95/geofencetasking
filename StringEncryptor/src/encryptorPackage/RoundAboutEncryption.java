@@ -11,7 +11,7 @@ import java.util.Set;
 
 import classPackageObfuscate.PackageFlattener;
 
-public class RoundAboutEncryption {
+public class ObfuscationCoordinator {
 
 	private static Map<String, String> fragmentDictionary = new HashMap<String, String>();
 
@@ -200,7 +200,7 @@ public class RoundAboutEncryption {
 		// Apply Package Obfuscation fixes
 		PackageFlattener.ManifestFixer(copiedFileLocation);
 		PackageFlattener.PackageFixer(copiedFileLocation + "\\java\\xyz");
-		//PackageFlattener.CleanUpOldPackages(copiedFileLocation + "\\java");
+		PackageFlattener.CleanUpOldPackages(copiedFileLocation + "\\java");
 	}
 
 }
