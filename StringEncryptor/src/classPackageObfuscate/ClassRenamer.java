@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.FilenameFilter;
@@ -27,6 +28,12 @@ import java.util.regex.Pattern;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 
 import org.apache.commons.io.FileUtils;
 import org.w3c.dom.Document;
@@ -37,8 +44,13 @@ import org.xml.sax.SAXException;
 
 class Start {
 	public static void main(String[] args) {
-		ClassRenamer cr = new ClassRenamer();
-		cr.renameClasses("C:\\Users\\karen\\Desktop\\Android Studio Projects\\groupfour\\TaskerProguardTest");
+		ClassRenamer cr = new ClassRenamer("C:\\Users\\karen\\Desktop\\Android Studio Projects\\groupfour\\TaskerProguardTest");
+		try {
+			cr.renameClasses();
+		} catch (TransformerException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 }
 /**
@@ -65,11 +77,18 @@ public class ClassRenamer {
 	// Names of components found in the manifest.
 	Map<String, String> componentNames;
 	
+	private String rootDir;
+	
+	public ClassRenamer(String rootDir) {
+		this.rootDir = rootDir;
+	}
+	
 	/**
 	 * Renames Android component classes and their references to a random String.
 	 * @param rootDir Path of the root directory of the project.
+	 * @throws TransformerException 
 	 */
-	public void renameClasses(String rootDir) {
+	public void renameClasses() throws TransformerException {
 		// Add possible Android components to a hashset to be used to find elements in the XML.
 		addComponents();
 		
@@ -104,8 +123,11 @@ public class ClassRenamer {
 	 * Recursively looks through all the files in a given path.
 	 * @param srcPath Root of the path to start looking for files from.
 	 * @throws IOException 
+	 * @throws SAXException 
+	 * @throws ParserConfigurationException 
+	 * @throws TransformerException 
 	 */
-	private void walkThroughFiles(String srcPath) throws IOException {
+	private void walkThroughFiles(String srcPath) throws IOException, TransformerException, ParserConfigurationException, SAXException {
 		File dir = new File(srcPath);
 		File [] files = dir.listFiles();
 		for (File f : files) {
@@ -114,7 +136,6 @@ public class ClassRenamer {
 				walkThroughFiles(f.getAbsolutePath());
 			} else { // Else, it's a java file.
 				readFileAndReplace(f);
-				break;
 			}
 		}
 		
@@ -124,8 +145,11 @@ public class ClassRenamer {
 	 * Replaces class names which are components with obfuscated names.
 	 * @param file
 	 * @throws IOException
+	 * @throws SAXException 
+	 * @throws ParserConfigurationException 
+	 * @throws TransformerException 
 	 */
-	private void readFileAndReplace(File file) throws IOException {
+	private void readFileAndReplace(File file) throws IOException, TransformerException, ParserConfigurationException, SAXException {
 		String absolutePath = file.getAbsolutePath();
 		
 		// Check if the file is a component.
@@ -178,6 +202,8 @@ public class ClassRenamer {
 		if (!imports.isEmpty()) {
 			replaceImports(imports, new File("C:\\Users\\karen\\Desktop\\Obfuscated stuff\\abc.java"));
 		}
+		
+		//writeToXml(rootDir + PATH_TO_MANIFEST, "C:\\Users\\karen\\Desktop\\Obfuscated stuff");
 	}
 
 	/**
@@ -203,8 +229,6 @@ public class ClassRenamer {
 
 		FileWriter fw = new FileWriter(new File("C:\\Users\\karen\\Desktop\\Obfuscated stuff\\abc.java"), false); // true to append
 		try {
-			
-			System.out.println("Print this:" + sb.toString());
 			fw.write(sb.toString());
 			fw.close();
 		} finally {
@@ -318,8 +342,10 @@ public class ClassRenamer {
 	 * and generates a random value for the class name.
 	 * @param xmlDoc
 	 * @return Map of the Android components
+	 * @throws TransformerException 
+	 * @throws FileNotFoundException 
 	 */
-	private Map<String, String> getComponentNames(Document xmlDoc) {
+	private Map<String, String> getComponentNames(Document xmlDoc) throws FileNotFoundException, TransformerException {
 		Map<String, String> componentNames = new HashMap<String, String>();
 		
 		// Get list of Android components
@@ -332,16 +358,34 @@ public class ClassRenamer {
 			
 			// Get the declared name of the component.
 			for (int i = 0; i < nl.getLength(); i++) {
+				// Get the name attribute.
 				NamedNodeMap attributes = nl.item(i).getAttributes();
-				String nameValue = attributes.getNamedItem("android:name").getNodeValue();
+				Node nameAttribute = attributes.getNamedItem("android:name");
+				
+				// Get its value, extract its package, and make a random name for it.
+				String nameValue = nameAttribute.getNodeValue();
 				String pkg = nameValue.substring(0, nameValue.lastIndexOf("."));
+				String randomName = generateRandomName();
+				
+				// Save the names to replace in componentNames and replace with obfuscated name.
 				if (nameValue.startsWith(".")) {
-					componentNames.put(packageName + nameValue, packageName + pkg + "." + generateRandomName());
+					componentNames.put(packageName + nameValue, packageName + pkg + "." + randomName);
 				} else {
-					componentNames.put(nameValue, pkg + "." + generateRandomName());
+					componentNames.put(nameValue, pkg + "." + randomName);
 				}
+				nameAttribute.setTextContent(pkg + "." + randomName);
 			}
 		}
+		
+		Transformer tr = TransformerFactory.newInstance().newTransformer();
+		tr.setOutputProperty(OutputKeys.INDENT, "yes");
+		tr.setOutputProperty(OutputKeys.METHOD, "xml");
+		tr.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
+		tr.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "4");
+
+		
+		// send DOM to file
+		tr.transform(new DOMSource(xmlDoc), new StreamResult(new FileOutputStream("C:\\Users\\karen\\Desktop\\Obfuscated stuff\\AndroidManifest.xml")));
 		
 		return componentNames;
 	}
