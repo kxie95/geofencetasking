@@ -170,4 +170,15 @@ public class PackageFlattener {
 			}
 		}
 	}
+
+	/** Deletes the remnants of the old folders */
+	public static void CleanUpOldPackages(String path) {
+		File root = new File(path);
+		File[] list = root.listFiles();
+		for (File f : list) {
+			if (f.isDirectory() && !f.getName().equals("xyz")) {
+				f.delete();
+			}
+		}
+	}
 }

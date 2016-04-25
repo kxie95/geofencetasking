@@ -103,10 +103,8 @@ public class ToolGUI {
 
 		// Button's action
 		runButton.addActionListener(new btnConnectAction()); // Register action
-		
-		
-		
-		//TODO REMOVE
+
+		// TODO REMOVE
 		inputLocationAddress.setText("D:\\AndroidProjects\\geofencetasking\\GeofenceTasker");
 		outputLocationAddress.setText("D:\\Users\\Chester\\Desktop\\TestOutput");
 	}
@@ -148,6 +146,7 @@ public class ToolGUI {
 
 }
 
+/** Does the obfuscating in the background providing a responsive GUI */
 class ObfuscatorWorker extends SwingWorker<Void, String> {
 
 	private File srcDir;
@@ -174,7 +173,6 @@ class ObfuscatorWorker extends SwingWorker<Void, String> {
 			RoundAboutEncryption.Obfuscate(destDir.getAbsolutePath() + "\\app\\src\\main");
 			ArgumentObfuscator.ObfuscateArguments(destDir.getAbsolutePath() + "\\app\\src\\main\\java");
 
-
 		} catch (Exception e) {
 			errorFlag = true;
 		}
@@ -198,6 +196,5 @@ class ObfuscatorWorker extends SwingWorker<Void, String> {
 			userMessage.setText("ERROR!");
 			errorFlag = false;
 		}
-
 	}
 }

@@ -9,7 +9,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.regex.PatternSyntaxException;
 
 public class TryCatchReplacer {
 
@@ -25,7 +24,7 @@ public class TryCatchReplacer {
 	private static FileWriter fw;
 	private static BufferedWriter bw;
 	private static String line;
-	
+
 	public static void Replace(File f) {
 		try {
 			fr = new FileReader(f);
@@ -38,7 +37,8 @@ public class TryCatchReplacer {
 				// search line for an if statement
 				Matcher ifStatementMatcher = ifStatement.matcher(line.trim());
 
-				// if it is an if statement, build try catch, else append normally
+				// if it is an if statement, build try catch, else append
+				// normally
 				if (ifStatementMatcher.matches()) {
 					// build try catch from if statement
 					sb.append(buildTryCatch(line.trim()));
@@ -75,7 +75,8 @@ public class TryCatchReplacer {
 	private static StringBuilder buildTryCatch(String rootIfStatement) {
 		StringBuilder builder = new StringBuilder();
 		try {
-			// check if this call to buildTryCatch is an else statement. This affects what we
+			// check if this call to buildTryCatch is an else statement. This
+			// affects what we
 			// do when the closing bracket is reached
 			boolean elseStatementPassed = false;
 			boolean hasCatchStatement = false;
@@ -89,7 +90,8 @@ public class TryCatchReplacer {
 				Matcher elseMatcher = elseStatement.matcher(trimmedLine);
 				Matcher closeBracketMatcher = closeBracketPattern.matcher(trimmedLine);
 				Matcher catchMatcher = catchStatementPattern.matcher(trimmedLine);
-				// if the line is a legitimate catch statement make sure an extra end bracket is used
+				// if the line is a legitimate catch statement make sure an
+				// extra end bracket is used
 				if (catchMatcher.matches()) {
 					hasCatchStatement = true;
 				}
@@ -99,7 +101,8 @@ public class TryCatchReplacer {
 					// append extra closed bracket to close nested loop
 					builder.append("}\n");
 					closingBracketCount--;
-				// if else if statement, add catch message and buildTryCatch from new else if statement
+					// if else if statement, add catch message and buildTryCatch
+					// from new else if statement
 				} else if (elseIfMatcher.matches()) {
 					builder.append(createNewCatchStatement());
 					closingBracketCount++;
@@ -107,21 +110,25 @@ public class TryCatchReplacer {
 					trimmedLine = trimmedLine.replaceFirst("}\\ ?else\\ ?", "");
 					builder.append(buildTryCatch(trimmedLine));
 					break;
-				// if else statement, add catch message
+					// if else statement, add catch message
 				} else if (elseMatcher.matches()) {
 					builder.append(createNewCatchStatement());
 					closingBracketCount++;
 					elseStatementPassed = true;
-				// if line is closing bracket, add catch message, close it, and break out of loop 
-				// as the main if statement has completed
+					// if line is closing bracket, add catch message, close it,
+					// and break out of loop
+					// as the main if statement has completed
 				} else if (closeBracketMatcher.matches()) {
-					// append an extra close bracket if there is a catch statement in this if block
+					// append an extra close bracket if there is a catch
+					// statement in this if block
 					if (hasCatchStatement) {
 						builder.append("}\n");
-						// create catch statement but don't increment bracket count since the catch already
+						// create catch statement but don't increment bracket
+						// count since the catch already
 						// exists in the current if statement
 						builder.append(createNewCatchStatement());
-					// skip create new catch statement if this is the else statement.
+						// skip create new catch statement if this is the else
+						// statement.
 					} else if (!elseStatementPassed) {
 						builder.append(createNewCatchStatement());
 						closingBracketCount++;
@@ -137,12 +144,10 @@ public class TryCatchReplacer {
 		}
 		return builder;
 	}
-	
+
 	private static String createNewCatchStatement() {
 		exceptionCount++;
-		String catchStatement = "} else {\n"
-				+ "throw new NullPointerException();\n"
-				+ "}\n"
+		String catchStatement = "} else {\n" + "throw new NullPointerException();\n" + "}\n"
 				+ "} catch(NullPointerException generatedException" + exceptionCount + ") {\n";
 		return catchStatement;
 	}
