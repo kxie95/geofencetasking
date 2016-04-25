@@ -202,8 +202,6 @@ public class ClassRenamer {
 		if (!imports.isEmpty()) {
 			replaceImports(imports, new File("C:\\Users\\karen\\Desktop\\Obfuscated stuff\\abc.java"));
 		}
-		
-		//writeToXml(rootDir + PATH_TO_MANIFEST, "C:\\Users\\karen\\Desktop\\Obfuscated stuff");
 	}
 
 	/**
