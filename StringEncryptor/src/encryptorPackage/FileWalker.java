@@ -49,14 +49,13 @@ public class FileWalker {
 
 					// Encrypt strings
 					StringReplacer.Replace(f, keyString);
-					
+
 					// Swap if-else statements with try-catch
 					TryCatchReplacer.Replace(f);
 
 					// Rename Android components.
-					ClassRenamer renamer = new ClassRenamer();
-					renamer.readFileAndReplace(f);
-					
+					ClassRenamer.readFileAndReplace(f);
+
 					// Move packages to one location
 					PackageFlattener.MoveJavaFile(startingPath, f);
 				}

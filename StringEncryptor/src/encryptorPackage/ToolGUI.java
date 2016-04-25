@@ -99,6 +99,10 @@ public class ToolGUI {
 
 		pane.add(runButton);
 
+		// Chester DEBUG TODO REMOVE
+		inputLocationAddress.setText("D:\\AndroidProjects\\geofencetasking\\GeofenceTasker");
+		outputLocationAddress.setText("D:\\Users\\Chester\\Desktop\\OneTime");
+		
 		// Set frame visible
 		frame1.setVisible(true);
 
@@ -170,8 +174,7 @@ class ObfuscatorWorker extends SwingWorker<Void, String> {
 
 			publish("Obfuscating...");
 
-			ClassRenamer cr = new ClassRenamer();
-			cr.renameClassesInXML(destDir.getAbsolutePath());
+			ClassRenamer.renameClassesInXML(destDir.getAbsolutePath());
 			
 			RoundAboutEncryption.Obfuscate(destDir.getAbsolutePath() + "\\app\\src\\main");
 			ArgumentObfuscator.ObfuscateArguments(destDir.getAbsolutePath() + "\\app\\src\\main\\java");

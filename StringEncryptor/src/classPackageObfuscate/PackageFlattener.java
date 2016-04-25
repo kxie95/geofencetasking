@@ -42,10 +42,9 @@ public class PackageFlattener {
 	public static void MoveJavaFile(String path, File f) {
 		try {
 			if (f.renameTo(new File(path + "\\xyz\\" + f.getName()))) {
-				// System.out.println("File is moved successful!");
+				System.out.println("File is moved successful!");
 			} else {
-				// System.out.println("File is failed to move! " + path +
-				// "\\xyz\\" + f.getName());
+				System.out.println("File is failed to move! " + path + "\\xyz\\" + f.getName());
 			}
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
@@ -176,6 +175,11 @@ public class PackageFlattener {
 	public static void CleanUpOldPackages(String path) {
 		File root = new File(path);
 		File[] list = root.listFiles();
+
+		// If no files in directory, return
+		if (list == null)
+			return;
+
 		for (File f : list) {
 			if (f.isDirectory() && !f.getName().equals("xyz")) {
 				try {
