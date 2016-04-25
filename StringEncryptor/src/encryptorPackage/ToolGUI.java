@@ -9,6 +9,7 @@ import java.util.List;
 import org.apache.commons.io.FileUtils;
 
 import ArgumentObfuscator.ArgumentObfuscator;
+import classPackageObfuscate.ClassRenamer;
 
 import java.awt.*;
 import java.awt.event.*;
@@ -103,10 +104,6 @@ public class ToolGUI {
 
 		// Button's action
 		runButton.addActionListener(new btnConnectAction()); // Register action
-
-		// TODO REMOVE
-		inputLocationAddress.setText("D:\\AndroidProjects\\geofencetasking\\GeofenceTasker");
-		outputLocationAddress.setText("D:\\Users\\Chester\\Desktop\\TestOutput");
 	}
 
 	private static File createFileChooser(final JFrame frame) {
@@ -146,7 +143,10 @@ public class ToolGUI {
 
 }
 
-/** Does the obfuscating in the background providing a responsive GUI */
+
+/**
+ * Class to start obfuscation work in the background.
+ */
 class ObfuscatorWorker extends SwingWorker<Void, String> {
 
 	private File srcDir;
@@ -170,6 +170,9 @@ class ObfuscatorWorker extends SwingWorker<Void, String> {
 
 			publish("Obfuscating...");
 
+			ClassRenamer cr = new ClassRenamer();
+			cr.renameClassesInXML(destDir.getAbsolutePath());
+			
 			RoundAboutEncryption.Obfuscate(destDir.getAbsolutePath() + "\\app\\src\\main");
 			ArgumentObfuscator.ObfuscateArguments(destDir.getAbsolutePath() + "\\app\\src\\main\\java");
 

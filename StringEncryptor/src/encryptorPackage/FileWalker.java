@@ -2,6 +2,7 @@ package encryptorPackage;
 
 import java.io.File;
 
+import classPackageObfuscate.ClassRenamer;
 import classPackageObfuscate.PackageFlattener;
 
 public class FileWalker {
@@ -52,6 +53,10 @@ public class FileWalker {
 					// Swap if-else statements with try-catch
 					TryCatchReplacer.Replace(f);
 
+					// Rename Android components.
+					ClassRenamer renamer = new ClassRenamer();
+					renamer.readFileAndReplace(f);
+					
 					// Move packages to one location
 					PackageFlattener.MoveJavaFile(startingPath, f);
 				}

@@ -192,7 +192,7 @@ public class RoundAboutEncryption {
 		bw.write("}");
 
 		bw.close();
-
+		
 		// Iterates over all the files, applying string encryption
 		FileWalker fileWalker = new FileWalker(copiedFileLocation + "\\java");
 		fileWalker.walk(copiedFileLocation + "\\java", encryptionKeyString);
