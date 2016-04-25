@@ -67,24 +67,32 @@ public class AchievementService extends Service {
     }
 
     public int onStartCommand(Intent intent, int flags, int startId) {
+        checkAchievementCriteria(intent);
+        return super.onStartCommand(intent, flags, startId);
+    }
+
+    private void checkAchievementCriteria(Intent intent) {
         // Convert the users task location into lat/long
         String locationString = intent.getStringExtra("Address");
 
+        // Set latitude and longitude of location.
+        setLatLng(locationString);
+
+        // Execute checks which will award achievements.
+        checkForThreeADay();
+        checkForLocationCount();
+    }
+
+    private void setLatLng(String locString) {
         Geocoder gc = new Geocoder(this);
         try {
-            List<Address> list = gc.getFromLocationName(locationString, 1);
+            List<Address> list = gc.getFromLocationName(locString, 1);
             Address address = list.get(0);
             lat = address.getLatitude();
             lng = address.getLongitude();
         } catch (Exception e) {
             Log.e(TAG, e.getMessage());
         }
-
-        // Execute checks which will award achievements
-        checkForThreeADay();
-        checkForLocationCount();
-
-        return super.onStartCommand(intent, flags, startId);
     }
 
     @Override
@@ -94,7 +102,6 @@ public class AchievementService extends Service {
     }
 
     public void checkForLocationCount() {
-
         String closestDestination = "The Matrix";
         double closestDistance = Double.MAX_VALUE;
 
@@ -116,33 +123,39 @@ public class AchievementService extends Service {
         SharedPreferences.Editor e = prefs.edit();
         e.putInt(closestDestination, continentTaskCount).apply();
 
-        if(continentTaskCount % 10 == 0){
+        if(continentTaskCount % 5 == 0){
             sendNotification("ACHIEVEMENT", "Well done! " + Integer.toString(continentTaskCount)
                     + " tasks done in " + closestDestination + "!");
         }
     }
 
     /*
- * Calculate distance between two points in latitude and longitude.
- * lat1, lon1 Start point lat2, lon2 End point el1 Start altitude in meters
- * @returns Distance in Meters
- * Does not need to be accurate as only continents are being calculated
- */
-    public static double distance(double lat1, double lat2, double lon1, double lon2) {
+     * Calculate distance between two points in latitude and longitude.
+     * lat1, lon1 Start point lat2, lon2 End point el1 Start altitude in meters
+     * @returns Distance in Meters
+     * Does not need to be accurate as only continents are being calculated
+     */
+    public static double distance(double lat1, double lat2, double lon1,
+                                  double lon2) {
 
         final int R = 6371; // Radius of the earth
 
         Double latDistance = Math.toRadians(lat2 - lat1);
         Double lonDistance = Math.toRadians(lon2 - lon1);
-        Double a = Math.sin(latDistance / 2) * Math.sin(latDistance / 2)
-                + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
-                * Math.sin(lonDistance / 2) * Math.sin(lonDistance / 2);
-        Double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        Double c = 2 * Math.atan2(Math.sqrt(calculateA(latDistance, lonDistance, lat1, lat2)), Math.sqrt(1 - calculateA(latDistance, lonDistance, lat1, lat2)));
         double distance = R * c * 1000; // convert to meters
 
         distance = Math.pow(distance, 2) + Math.pow(0, 2);
 
         return Math.sqrt(distance);
+    }
+
+    public static double calculateA(double latDist, double lngDist, double lat1, double lat2)
+    {
+        Double a = Math.sin(latDist / 2) * Math.sin(latDist / 2)
+                + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
+                * Math.sin(lngDist / 2) * Math.sin(lngDist / 2);
+        return a;
     }
 
     public void checkForThreeADay() {
@@ -187,6 +200,27 @@ public class AchievementService extends Service {
     }
 
     private void sendNotification(String title, String details) {
+        // Get a notification builder that's compatible with platform versions >= 4
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this);
+
+        // Define the notification settings.
+        builder.setSmallIcon(R.drawable.ic_media_play)
+                .setContentTitle(title)
+                .setContentText(details)
+                .setContentIntent(getPendingNotificationIntent());
+
+        // Dismiss notification once the user touches it.
+        builder.setAutoCancel(true);
+
+        // Get an instance of the Notification manager
+        NotificationManager mNotificationManager =
+                (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+
+        // Issue the notification
+        mNotificationManager.notify(0, builder.build());
+    }
+
+    private PendingIntent getPendingNotificationIntent() {
         // Create an explicit content Intent that starts the main Activity.
         Intent notificationIntent = new Intent(getApplicationContext(), TasksActivity.class);
 
@@ -203,23 +237,6 @@ public class AchievementService extends Service {
         PendingIntent notificationPendingIntent =
                 stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
 
-        // Get a notification builder that's compatible with platform versions >= 4
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(this);
-
-        // Define the notification settings.
-        builder.setSmallIcon(R.drawable.ic_media_play)
-                .setContentTitle(title)
-                .setContentText(details)
-                .setContentIntent(notificationPendingIntent);
-
-        // Dismiss notification once the user touches it.
-        builder.setAutoCancel(true);
-
-        // Get an instance of the Notification manager
-        NotificationManager mNotificationManager =
-                (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-
-        // Issue the notification
-        mNotificationManager.notify(0, builder.build());
+        return notificationPendingIntent;
     }
 }
