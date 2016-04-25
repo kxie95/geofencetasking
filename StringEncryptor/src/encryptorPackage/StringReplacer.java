@@ -46,7 +46,7 @@ public class StringReplacer {
 				Matcher m = p.matcher(line);
 
 				while (m.find()) {
-					System.out.println("FOUND: " + m.group());
+//					System.out.println("FOUND: " + m.group());
 
 					try {
 						// Replaces all strings found with the StringDecryptor method and an encrypted version of the string
@@ -54,16 +54,15 @@ public class StringReplacer {
 								+ encrypt(m.group().substring(1, m.group().length() - 1), keyString) + "\")");
 
 						// DEBUG STATEMENTS FOR TESTING
-						System.out.println("OUTPUTTED LINE IS: " + line);
-						String testEncryption = encrypt(m.group().substring(1, m.group().length() - 1), keyString);
-						System.out.println("ENCRYPTED STRING: " + testEncryption);
-						String testDecryption = decrypt(testEncryption, keyString);
-						System.out.println("DECRYPTED STRING: " + testDecryption);
+//						System.out.println("OUTPUTTED LINE IS: " + line);
+//						String testEncryption = encrypt(m.group().substring(1, m.group().length() - 1), keyString);
+//						System.out.println("ENCRYPTED STRING: " + testEncryption);
+//						String testDecryption = decrypt(testEncryption, keyString);
+//						System.out.println("DECRYPTED STRING: " + testDecryption);
 
 						// If there is a pattern syntax and it can't handle the
 						// string input, just ignore it
 					} catch (PatternSyntaxException e) {
-
 					}
 
 				}
@@ -73,7 +72,7 @@ public class StringReplacer {
 				// Add package name to file so it can user String Decoder
 				// method.
 				if (packageBool == false) {
-					sb.append("import SDC.StringDecoder;\n");
+					sb.append("import xyz.StringDecoder;\n");
 					packageBool = true;
 				}
 			}

@@ -3,12 +3,13 @@ package encryptorPackage;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
+
+import classPackageObfuscate.PackageFlattener;
 
 public class RoundAboutEncryption {
 
@@ -20,17 +21,17 @@ public class RoundAboutEncryption {
 			File programRootDirectory = new File(copiedFileLocation);
 
 			// Creates a package to store the generated java files
-			File generatedDirectory = new File(programRootDirectory.toString() + "\\SDC");
+			File generatedDirectory = new File(programRootDirectory.toString() + "\\java\\xyz");
 			generatedDirectory.mkdir();
 
 			// Create the globalList java file
-			File fileWithListOfVariables = new File(programRootDirectory.toString() + "\\SDC\\GlobalList.java");
+			File fileWithListOfVariables = new File(programRootDirectory.toString() + "\\java\\xyz\\GlobalList.java");
 			if (!fileWithListOfVariables.exists()) {
 				fileWithListOfVariables.createNewFile();
 			}
 
 			// Create the decoder java file
-			File fileWithStringDecoder = new File(programRootDirectory.toString() + "\\SDC\\StringDecoder.java");
+			File fileWithStringDecoder = new File(programRootDirectory.toString() + "\\java\\xyz\\StringDecoder.java");
 			if (!fileWithStringDecoder.exists()) {
 				fileWithStringDecoder.createNewFile();
 			}
@@ -40,7 +41,7 @@ public class RoundAboutEncryption {
 			FileWriter fw = new FileWriter(fileWithListOfVariables.getAbsoluteFile());
 			BufferedWriter bw = new BufferedWriter(fw);
 
-			bw.write("package SDC;");
+			bw.write("package xyz;");
 			bw.write("public class GlobalList { \n");
 
 			// Randomly generate variables and strings of text, used for the key
@@ -59,8 +60,8 @@ public class RoundAboutEncryption {
 			int fragmentNumber3 = (int) (Math.random() * numberOfVariables) + 1;
 			int fragmentNumber4 = (int) (Math.random() * numberOfVariables) + 1;
 
-			System.out.println("NUMBER FRAGMENTS: " + fragmentNumber1 + ", " + fragmentNumber2 + ", " + fragmentNumber3
-					+ ", " + fragmentNumber4);
+//			System.out.println("NUMBER FRAGMENTS: " + fragmentNumber1 + ", " + fragmentNumber2 + ", " + fragmentNumber3
+//					+ ", " + fragmentNumber4);
 
 			// Loops through the alphabet
 			for (int i = 0; i < numberOfLoops; i++) {
@@ -110,7 +111,7 @@ public class RoundAboutEncryption {
 				encryptionKeyString = encryptionKeyString + dictValue;
 			}
 
-			System.out.println("ENCRYPTION KEY STRING: " + encryptionKeyString);
+//			System.out.println("ENCRYPTION KEY STRING: " + encryptionKeyString);
 
 			// CREATE THE STRING-DECODER CLASS
 
@@ -119,7 +120,7 @@ public class RoundAboutEncryption {
 			bw = new BufferedWriter(fw);
 
 			// package
-			bw.write("package SDC;");
+			bw.write("package xyz;");
 
 			// imports
 			bw.write("import java.security.Key; \n");
@@ -190,14 +191,19 @@ public class RoundAboutEncryption {
 			bw.write("}");
 
 			bw.close();
+			
+			
 
 			// Iterates over all the files, applying string encryption to java classes
-			FileWalker fileWalker = new FileWalker();
-			fileWalker.walk(copiedFileLocation, encryptionKeyString);
+			FileWalker fileWalker = new FileWalker(copiedFileLocation + "\\java");
+			fileWalker.walk(copiedFileLocation + "\\java", encryptionKeyString);
+		
+			PackageFlattener.ManifestFixer(copiedFileLocation);
+			PackageFlattener.PackageFixer(copiedFileLocation + "\\java\\xyz");
 
 		}
-}
 
-		
+
+}
 	
 

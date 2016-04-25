@@ -102,6 +102,12 @@ public class ToolGUI {
 
 		// Button's action
 		runButton.addActionListener(new btnConnectAction()); // Register action
+		
+		
+		
+		//TODO REMOVE
+		inputLocationAddress.setText("D:\\AndroidProjects\\geofencetasking\\GeofenceTasker");
+		outputLocationAddress.setText("D:\\Users\\Chester\\Desktop\\TestOutput");
 	}
 
 	private static File createFileChooser(final JFrame frame) {
@@ -163,7 +169,7 @@ class ObfuscatorWorker extends SwingWorker<Void, String> {
 			FileUtils.copyDirectory(srcDir, destDir);
 
 			publish("Obfuscating...");
-			RoundAboutEncryption.Obfuscate(destDir.getAbsolutePath() + "\\app\\src\\main\\java");
+			RoundAboutEncryption.Obfuscate(destDir.getAbsolutePath() + "\\app\\src\\main");
 
 		} catch (Exception e) {
 			errorFlag = true;
