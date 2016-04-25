@@ -11,7 +11,7 @@ public class Task {
 
     public Task() {
         TasksActivity ta = new TasksActivity();
-        com.app.gfour.geofencetasker.newtask.TasksActivity ta = new com.app.gfour.geofencetasker.newtask.TasksActivity();
+        com.app.gfour.geofencetasker.newtask.TasksActivity tb = new com.app.gfour.geofencetasker.newtask.TasksActivity();
     }
     public Task(String title, String address) {
         super();

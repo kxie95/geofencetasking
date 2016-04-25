@@ -114,77 +114,164 @@ public class ClassRenamer {
 				walkThroughFiles(f.getAbsolutePath());
 			} else { // Else, it's a java file.
 				readFileAndReplace(f);
+				break;
 			}
 		}
 		
 	}
 	
-	private void readFileAndReplace(File file) {
+	/**
+	 * Replaces class names which are components with obfuscated names.
+	 * @param file
+	 * @throws IOException
+	 */
+	private void readFileAndReplace(File file) throws IOException {
 		String absolutePath = file.getAbsolutePath();
+		
+		// Check if the file is a component.
+		boolean isComponent = isComponent(absolutePath);
 		
 		// For imports relevant to this file.
 		Map<String, String> imports = new HashMap<String, String>();
 		
 		// Full class declaration of this file.
 		String fullDeclaration = getDeclaredNameFromAbsolutePath(absolutePath);
+		String className = getClassNameFromPackage(fullDeclaration);
+		String obfuscatedClassName = null;
 		
-		// Check if it's a component.
-		boolean isComponent = isComponent(absolutePath);
+		// Add itself to imports if its a component.
 		if (isComponent) {
-			System.out.println(file.getName() + " is a component.");
-			imports.put(getClassNameFromPackage(fullDeclaration), 
+			imports.put(className, 
 					getClassNameFromPackage(componentNames.get(fullDeclaration)));
-			System.out.println(getClassNameFromPackage(fullDeclaration) 
-					+ " " + getClassNameFromPackage(componentNames.get(fullDeclaration)));
+			obfuscatedClassName = getClassNameFromPackage(componentNames.get(fullDeclaration));
 		}
 		
-		// Read the file.
-		try {
-			FileReader fr = new FileReader(file);
-			BufferedReader br = new BufferedReader(fr);
-
-			StringBuilder sb = new StringBuilder();
-			String line;
-			while ((line = br.readLine()) != null) {
-				for (String componentName : componentNames.keySet()) {
-					String className = getClassNameFromPackage(componentName);
-					if (line.contains(componentName)) {
-						line = line.replace(componentName, componentNames.get(componentName));
-						break;
-					}
-					if (line.contains(className)){
-						line = line.replace(className, getClassNameFromPackage(componentNames.get(componentName)));
+		// Read file as a string.
+		String fileString = FileUtils.readFileToString(file);
+		
+		// Get imports part of file.
+		String importsInFile = fileString.substring(0, fileString.indexOf("{"));
+		for (String line : importsInFile.split("\n")) {
+			// Get imports that are components.
+			if (line.startsWith("import")) {
+				for (String component : componentNames.keySet()) {
+					if (line.contains(component)) {
+						imports.put(getClassNameFromPackage(component), 
+								getClassNameFromPackage(componentNames.get(component)));
 					}
 				}
-				
-				// Can remove \n to make it less readable
-				sb.append(line + "\n");
-
 			}
-			//System.out.println(sb.toString());
-//
-//			BufferedWriter bw = null;
-//			FileWriter fw = null;
-//			
-//			try {
-//				fw = new FileWriter(file, false);
-//				bw = new BufferedWriter(fw);
-//
-//				bw.write(sb.toString());
-//				br.close();
-//
-//			} catch (FileNotFoundException e) {
-//				System.out.println("File was not found!");
-//			} catch (IOException e) {
-//				System.out.println("No file found!");
-//			} finally {
-//				bw.close();
-//			}
-		} catch (FileNotFoundException e) {
-			System.out.println("Error1!");
-		} catch (IOException e) {
-			System.out.println("Error2!");
 		}
+		System.out.println("---------");
+		System.out.println(absolutePath);
+		printMap(imports);
+		System.out.println("---------");
+		
+		System.out.println("REPLACING FULLY DECLARED");
+		replaceFullyDeclaredNames(file);
+		
+		if (isComponent) {
+			System.out.println("REPLACING CLASS NAME");
+			replaceClassName(className, obfuscatedClassName, new File("C:\\Users\\karen\\Desktop\\Obfuscated stuff\\abc.java"));
+		}
+		
+		if (!imports.isEmpty()) {
+			replaceImports(imports, new File("C:\\Users\\karen\\Desktop\\Obfuscated stuff\\abc.java"));
+		}
+	}
+
+	/**
+	 * Replaces class names of the declared imports.
+	 * @param imports
+	 * @param file
+	 * @throws IOException
+	 */
+	private void replaceImports(Map<String, String> imports, File file) throws IOException {
+		FileReader fr = new FileReader(file);
+		BufferedReader br = new BufferedReader(fr);
+
+		StringBuilder sb = new StringBuilder();
+		String line;
+		while ((line = br.readLine()) != null) {
+			for (String imp : imports.keySet()) {
+				if (line.contains(imp)) {
+					line = line.replace(imp, imports.get(imp));
+				}
+			}
+			sb.append(line + "\n");
+		}
+
+		FileWriter fw = new FileWriter(new File("C:\\Users\\karen\\Desktop\\Obfuscated stuff\\abc.java"), false); // true to append
+		try {
+			
+			System.out.println("Print this:" + sb.toString());
+			fw.write(sb.toString());
+			fw.close();
+		} finally {
+			fw.close();
+		}
+	}
+	
+	/**
+	 * Replaces the class's name to another string.
+	 * @param from The original class's name as a String.
+	 * @param to The name to rename the class to.
+	 * @param file The file to replace all references of this class for.
+	 * @throws IOException
+	 */
+	private void replaceClassName(String from, String to, File file) throws IOException {
+		FileReader fr = new FileReader(file);
+		BufferedReader br = new BufferedReader(fr);
+
+		StringBuilder sb = new StringBuilder();
+		String line;
+		while ((line = br.readLine()) != null) {
+			if (line.contains(from)) {
+				line = line.replace(from, to);
+			}
+			sb.append(line + "\n");
+		}
+
+		FileWriter fw = new FileWriter(new File("C:\\Users\\karen\\Desktop\\Obfuscated stuff\\abc.java"), false); // true to append
+		try {
+			fw.write(sb.toString());
+			fw.close();
+		} finally {
+			fw.close();
+		}	
+	}
+
+	/**
+	 * Replaces any references which have been fully declared (full package name included) to its obfuscated name.
+	 * These obfuscated names are stored in componentNames.
+	 * @param file To replace references in.
+	 * @throws IOException
+	 */
+	private void replaceFullyDeclaredNames(File file) throws IOException {
+		FileReader fr = new FileReader(file);
+		BufferedReader br = new BufferedReader(fr);
+
+		StringBuffer sb = new StringBuffer();
+		String line;
+		while ((line = br.readLine()) != null) {
+			for (String componentName : componentNames.keySet()) {
+				if (line.contains(componentName)) {
+					line = line.replace(componentName, componentNames.get(componentName));
+				}
+			}
+			
+			// Can remove \n to make it less readable
+			sb.append(line + "\n");
+		}
+
+		FileWriter fw = new FileWriter(new File("C:\\Users\\karen\\Desktop\\Obfuscated stuff\\abc.java"), false); // true to append
+		try {
+			fw.write(sb.toString());
+			fw.close();
+		} finally {
+			fw.close();
+		}
+
 	}
 
 	/**
@@ -284,6 +371,10 @@ public class ClassRenamer {
 		return doc;
 	}
 
+	/**
+	 * Generates a random string, to be used as a class name.
+	 * @return
+	 */
 	private String generateRandomName() {
 		String randomString = new BigInteger(32, random).toString(32);
 		// To ensure it begins with a letter
@@ -314,5 +405,15 @@ public class ClassRenamer {
 		androidComponents.add("service");
 		androidComponents.add("provider");
 		androidComponents.add("receiver");
+	}
+	
+	/**
+	 * Convenience method for printing the contents of a map.
+	 * @param map
+	 */
+	private void printMap(Map<String, String> map) {
+		for (String key : map.keySet()) {
+			System.out.println(key + " " + map.get(key));
+		}
 	}
 }
