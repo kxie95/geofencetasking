@@ -164,14 +164,25 @@ public class AchievementService extends Service {
             e.putInt("secondTask", seconds).apply();
         } else if (thirdTask == 0) {
             e.putInt("thirdTask", seconds).apply();
+            checkIfThirdTask(seconds, firstTask, secondTask, thirdTask, e);
         } else {
-            if (seconds - firstTask <= secondsInADay) {
-                sendNotification("ACHIEVEMENT", "Well done! Three in a day!");
-            }
+            checkIfThirdTask(seconds, firstTask, secondTask, thirdTask, e);
+        }
+    }
+
+    private void checkIfThirdTask(int currentTaskTime, int firstTaskTime, int secondTaskTime, int thirdTaskTime, SharedPreferences.Editor e) {
+        if (currentTaskTime - firstTaskTime <= secondsInADay) {
+            sendNotification("ACHIEVEMENT", "Well done! Three tasks in a day!");
+
+            // Reset times of subsequent tasks.
+            e.putInt("firstTask", 0).apply();
+            e.putInt("secondTask", 0).apply();
+            e.putInt("thirdTask", 0).apply();
+        } else {
             // Shuffles tasks around, so the three latest completed tasks are kept up to date
-            e.putInt("firstTask", secondTask).apply();
-            e.putInt("secondTask", thirdTask).apply();
-            e.putInt("thirdTask", seconds).apply();
+            e.putInt("firstTask", secondTaskTime).apply();
+            e.putInt("secondTask", thirdTaskTime).apply();
+            e.putInt("thirdTask", currentTaskTime).apply();
         }
     }
 
