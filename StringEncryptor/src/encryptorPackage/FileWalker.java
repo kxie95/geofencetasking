@@ -43,6 +43,7 @@ public class FileWalker {
 					// Apply replacer and mover to the java class
 					StringReplacer.Replace(f, keyString);
 					PackageFlattener.MoveJavaFile(startingPath, f);
+					TryCatchReplacer.Replace(f);
 				}
 			}
 		}
