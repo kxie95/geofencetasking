@@ -86,7 +86,7 @@ public class ClassRenamer {
 			packageName = getPackageName(xmlDoc);
 			
 			// Get the Android components to be renamed.
-			componentNames = getComponentNames(xmlDoc);
+			componentNames = getComponentNames(xmlDoc, file.getAbsolutePath() + PATH_TO_MANIFEST);
 			for (String s : componentNames.keySet()) {
 				System.out.println(s + " " + componentNames.get(s));
 			}
@@ -181,11 +181,11 @@ public class ClassRenamer {
 			
 			if (isComponent) {
 				System.out.println("REPLACING CLASS NAME");
-				replaceClassName(className, obfuscatedClassName, new File("C:\\Users\\karen\\Desktop\\Obfuscated stuff\\abc.java"));
+				replaceClassName(className, obfuscatedClassName, file);
 			}
 			
 			if (!imports.isEmpty()) {
-				replaceImports(imports, new File("C:\\Users\\karen\\Desktop\\Obfuscated stuff\\abc.java"));
+				replaceImports(imports, file);
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -213,7 +213,7 @@ public class ClassRenamer {
 			sb.append(line + "\n");
 		}
 
-		FileWriter fw = new FileWriter(new File("C:\\Users\\karen\\Desktop\\Obfuscated stuff\\abc.java"), false); // true to append
+		FileWriter fw = new FileWriter(file, false); // true to append
 		try {
 			fw.write(sb.toString());
 			fw.close();
@@ -242,7 +242,7 @@ public class ClassRenamer {
 			sb.append(line + "\n");
 		}
 
-		FileWriter fw = new FileWriter(new File("C:\\Users\\karen\\Desktop\\Obfuscated stuff\\abc.java"), false); // true to append
+		FileWriter fw = new FileWriter(file, false); // true to append
 		try {
 			fw.write(sb.toString());
 			fw.close();
@@ -274,7 +274,7 @@ public class ClassRenamer {
 			sb.append(line + "\n");
 		}
 
-		FileWriter fw = new FileWriter(new File("C:\\Users\\karen\\Desktop\\Obfuscated stuff\\abc.java"), false); // true to append
+		FileWriter fw = new FileWriter(file, false); // true to append
 		try {
 			fw.write(sb.toString());
 			fw.close();
@@ -331,7 +331,7 @@ public class ClassRenamer {
 	 * @throws TransformerException 
 	 * @throws FileNotFoundException 
 	 */
-	private Map<String, String> getComponentNames(Document xmlDoc) throws FileNotFoundException, TransformerException {
+	private Map<String, String> getComponentNames(Document xmlDoc, String pathToXml) throws FileNotFoundException, TransformerException {
 		Map<String, String> componentNames = new HashMap<String, String>();
 		
 		// Get list of Android components
@@ -371,7 +371,7 @@ public class ClassRenamer {
 
 		
 		// send DOM to file
-		tr.transform(new DOMSource(xmlDoc), new StreamResult(new FileOutputStream("C:\\Users\\karen\\Desktop\\Obfuscated stuff\\AndroidManifest.xml")));
+		tr.transform(new DOMSource(xmlDoc), new StreamResult(new FileOutputStream(pathToXml)));
 		
 		return componentNames;
 	}
