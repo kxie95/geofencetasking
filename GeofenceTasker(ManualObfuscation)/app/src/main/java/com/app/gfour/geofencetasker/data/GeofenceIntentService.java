@@ -55,7 +55,7 @@ public class GeofenceIntentService extends IntentService {
 
         GeofencingEvent geofencingEvent = GeofencingEvent.fromIntent(intent);
         if (geofencingEvent.hasError()) {
-            Log.e(TAG, Integer.toString(geofencingEvent.getErrorCode()));
+
             return;
         }
 
@@ -76,7 +76,6 @@ public class GeofenceIntentService extends IntentService {
                 String transitionString = getTransitionString(geofenceTransition);
                 sendNotification(transitionString, transitionDetails);
             } else {
-                Log.e(TAG, "GeofenceTransition" + geofenceTransition);
             }
         } else {
             if (geofenceTransition == Geofence.GEOFENCE_TRANSITION_DWELL) {
@@ -92,7 +91,6 @@ public class GeofenceIntentService extends IntentService {
                 String transitionString = getTransitionString(geofenceTransition);
                 sendNotification(transitionString, transitionDetails);
             } else {
-                Log.e(TAG, "GeofenceTransitionDwell" + geofenceTransition);
             }
         }
     }
