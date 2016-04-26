@@ -101,7 +101,6 @@ public class NewTaskActivity extends AppCompatActivity
         mSupportPlaceFragment.setOnPlaceSelectedListener(new PlaceSelectionListener() {
             @Override
             public void onPlaceSelected(Place place) {
-                Log.i(TAG, "Place: " + place.getName());
                 mSelectedPlace = place;
                 mSelectedAddress = place.getAddress().toString();
                 mSupportPlaceFragment.setText(mSelectedAddress);
@@ -109,8 +108,6 @@ public class NewTaskActivity extends AppCompatActivity
 
             @Override
             public void onError(Status status) {
-                Log.e(TAG, "onError: Status = " + status.toString());
-
                 Toast.makeText(getBaseContext(), status.getStatusMessage(), Toast.LENGTH_LONG)
                         .show();
             }
@@ -144,25 +141,21 @@ public class NewTaskActivity extends AppCompatActivity
 
     @Override
     public void onConnected(Bundle connectionHint) {
-        Log.i(TAG, "Connected to GoogleApiClient");
-
         createGeofence();
     }
 
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult result) {
-        Log.i(TAG, "Connection failed: ConnectionResult.getErrorCode() = " + result.getErrorCode());
     }
 
     @Override
     public void onConnectionSuspended(int cause) {
-        Log.i(TAG, "Connection suspended");
+
     }
 
     @Override
     public void onResult(@NonNull Status status) {
         if (status.isSuccess()) {
-            Log.i(TAG, "Geofence created for new task.");
             //Return back to the main task list activity.
             Intent intent = new Intent(NewTaskActivity.this, TasksActivity.class);
 
@@ -174,12 +167,10 @@ public class NewTaskActivity extends AppCompatActivity
 
             startActivity(intent);
         } else {
-            Log.e(TAG, "ERROR: Geofence not created. (Status Code:" + status.getStatusCode() + ")");
         }
     }
 
     private void addToGeofenceList(int geofenceID, double latitude, double longitude) {
-        Log.d(TAG, "ID: " + geofenceID + ", Latitude: " + latitude + ", Longitude: " + longitude);
         mGeofenceList.add(new Geofence.Builder()
                 .setRequestId(Integer.toString(geofenceID))
                 .setCircularRegion(
@@ -233,10 +224,8 @@ public class NewTaskActivity extends AppCompatActivity
                         mGeofencePendingIntent
                 ).setResultCallback(this); // Result processed in onResult().
                 LocationManager lm = (LocationManager)this.getSystemService(Context.LOCATION_SERVICE);
-                Log.i(TAG, "gps enabled?" + lm.isProviderEnabled(LocationManager.GPS_PROVIDER));
             } catch (SecurityException securityException) {
                 // Catch exception generated if the app does not use ACCESS_FINE_LOCATION permission.
-                Log.e(TAG, "Invalid location permission.", securityException);
             }
         }
     }

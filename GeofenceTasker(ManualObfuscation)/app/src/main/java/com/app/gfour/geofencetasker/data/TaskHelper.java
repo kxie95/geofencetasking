@@ -30,7 +30,6 @@ public class TaskHelper extends SQLiteOpenHelper {
 
     @Override
 	public void onCreate(SQLiteDatabase db) {
-        Log.i("onCreate", "creating db");
         // SQL statement to create task table
         String CREATE_TABLE = "CREATE TABLE " + TABLE_NAME + " (" +
                 TaskEntry.COLUMN_NAME_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
@@ -42,19 +41,16 @@ public class TaskHelper extends SQLiteOpenHelper {
 
     @Override
 	public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        Log.i("onUpgrade", "dropping table then creating");
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_NAME);
 		onCreate(db);
 	}
 
     @Override
 	public void onDowngrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        Log.i("onDowngrade", "calling onUpgrade");
 		onUpgrade(db, oldVersion, newVersion);
 	}
 
 	public void addTask(Task task) {
-        Log.i("addTask", task.toString());
         SQLiteDatabase db = this.getWritableDatabase();
 
         // Create values to add into the table.
@@ -132,13 +128,11 @@ public class TaskHelper extends SQLiteOpenHelper {
         cursor.close();
         db.close();
 
-        Log.i("getTaskByFields", Integer.toString(id));
 
         return id;
     }
 
     public List<Task> getAllTasks() {
-        Log.i("getAllTasks", "getAllTasks");
         List<Task> tasks = new ArrayList<Task>();
 
         // Query to select all tasks from the task table
@@ -160,7 +154,6 @@ public class TaskHelper extends SQLiteOpenHelper {
             } while (cursor.moveToNext());
         }
 
-        Log.d("getAllTasks()", tasks.toString());
 
         cursor.close();
         db.close();

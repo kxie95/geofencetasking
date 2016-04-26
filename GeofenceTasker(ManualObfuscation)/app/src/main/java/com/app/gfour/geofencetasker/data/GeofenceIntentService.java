@@ -32,7 +32,6 @@ public class GeofenceIntentService extends IntentService {
     public void onCreate() {
         super.onCreate();
         mTaskHelper = new TaskHelper(this);
-        Log.d(TAG, "GeofenceIntentService has been created.");
     }
 
     /**
@@ -53,11 +52,10 @@ public class GeofenceIntentService extends IntentService {
 
     @Override
     protected void onHandleIntent(Intent intent) {
-        Log.d(TAG, "OnHandleIntent called.");
 
         GeofencingEvent geofencingEvent = GeofencingEvent.fromIntent(intent);
         if (geofencingEvent.hasError()) {
-            Log.e(TAG, Integer.toString(geofencingEvent.getErrorCode()));
+
             return;
         }
 
@@ -78,7 +76,6 @@ public class GeofenceIntentService extends IntentService {
                 String transitionString = getTransitionString(geofenceTransition);
                 sendNotification(transitionString, transitionDetails);
             } else {
-                Log.e(TAG, "GeofenceTransition" + geofenceTransition);
             }
         } else {
             if (geofenceTransition == Geofence.GEOFENCE_TRANSITION_DWELL) {
@@ -94,7 +91,6 @@ public class GeofenceIntentService extends IntentService {
                 String transitionString = getTransitionString(geofenceTransition);
                 sendNotification(transitionString, transitionDetails);
             } else {
-                Log.e(TAG, "GeofenceTransitionDwell" + geofenceTransition);
             }
         }
     }

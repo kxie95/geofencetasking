@@ -91,7 +91,6 @@ public class AchievementService extends Service {
             lat = address.getLatitude();
             lng = address.getLongitude();
         } catch (Exception e) {
-            Log.e(TAG, e.getMessage());
         }
     }
 
