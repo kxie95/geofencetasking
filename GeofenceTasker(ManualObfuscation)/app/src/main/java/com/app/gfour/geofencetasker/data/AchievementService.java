@@ -135,14 +135,14 @@ public class AchievementService extends Service {
      * @returns Distance in Meters
      * Does not need to be accurate as only continents are being calculated
      */
-    public static double distance(double lat1, double lat2, double lon1,
-                                  double lon2) {
+    public static double distance(double lat1, double lat2, double lon1, double lon2) {
 
         final int R = 6371; // Radius of the earth
 
         Double latDistance = Math.toRadians(lat2 - lat1);
         Double lonDistance = Math.toRadians(lon2 - lon1);
-        Double c = 2 * Math.atan2(Math.sqrt(calculateA(latDistance, lonDistance, lat1, lat2)), Math.sqrt(1 - calculateA(latDistance, lonDistance, lat1, lat2)));
+        Double a = calculateA(latDistance, lonDistance, lat1, lat2);
+        Double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
         double distance = R * c * 1000; // convert to meters
 
         distance = Math.pow(distance, 2) + Math.pow(0, 2);

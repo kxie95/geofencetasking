@@ -75,7 +75,8 @@ public class GeofenceIntentService extends IntentService {
                         triggeredGeofences);
 
                 // Send notification and log the transition details.
-                sendNotification(getTransitionString(geofenceTransition), transitionDetails);
+                String transitionString = getTransitionString(geofenceTransition);
+                sendNotification(transitionString, transitionDetails);
             } else {
                 Log.e(TAG, "GeofenceTransition" + geofenceTransition);
             }
@@ -90,7 +91,8 @@ public class GeofenceIntentService extends IntentService {
                         triggeredGeofences);
 
                 // Send notification and log the transition details.
-                sendNotification(getTransitionString(geofenceTransition), transitionDetails);
+                String transitionString = getTransitionString(geofenceTransition);
+                sendNotification(transitionString, transitionDetails);
             } else {
                 Log.e(TAG, "GeofenceTransitionDwell" + geofenceTransition);
             }
@@ -122,9 +124,7 @@ public class GeofenceIntentService extends IntentService {
         }
     }
 
-    private String getTransitionDetailsAsString(
-            int geofenceTransition,
-            List<Geofence> triggeredGeofences) {
+    private String getTransitionDetailsAsString(int geofenceTransition, List<Geofence> triggeredGeofences) {
         String transitionString = getTransitionString(geofenceTransition);
         ArrayList<String> triggeredGeofencesTaskList = new ArrayList<>();
 
