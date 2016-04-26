@@ -149,8 +149,7 @@ public class AchievementService extends Service {
         return Math.sqrt(distance);
     }
 
-    public static double calculateA(double latDist, double lngDist, double lat1, double lat2)
-    {
+    public static double calculateA(double latDist, double lngDist, double lat1, double lat2) {
         Double a = Math.sin(latDist / 2) * Math.sin(latDist / 2)
                 + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
                 * Math.sin(lngDist / 2) * Math.sin(lngDist / 2);

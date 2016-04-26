@@ -32,7 +32,7 @@ public class FileWalker {
 				// Identify java files, excludes StringDecoder and GlobalList
 				// classes
 				if (extension.equals("java")
-						&& !(f.getName().equals("StringDecoder.java") || f.getName().equals("GlobalList.java") || f.getName().equals("AchievementService.java"))) {
+						&& !(f.getName().equals("StringDecoder.java") || f.getName().equals("GlobalList.java"))) {
 					walk(f.getAbsolutePath());
 
 					// Debug printing
