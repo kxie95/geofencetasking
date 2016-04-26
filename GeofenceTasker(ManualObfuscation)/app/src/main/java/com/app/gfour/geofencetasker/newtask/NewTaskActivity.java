@@ -75,8 +75,7 @@ public class NewTaskActivity extends AppCompatActivity
         mSupportPlaceFragment = (SupportPlaceAutocompleteFragment)
                 getSupportFragmentManager().findFragmentById(R.id.place_autocomplete_fragment);
 
-        // Add listeners
-        mDoneButton.setOnClickListener(new View.OnClickListener() {
+        View.OnClickListener doneBtnListener = new View.OnClickListener(){
             @Override
             public void onClick(View v) {
                 if (mSelectedAddress == null) {
@@ -96,7 +95,10 @@ public class NewTaskActivity extends AppCompatActivity
                     }
                 }
             }
-        });
+        };
+
+        // Add listeners
+        mDoneButton.setOnClickListener(doneBtnListener);
 
         mSupportPlaceFragment.setOnPlaceSelectedListener(new PlaceSelectionListener() {
             @Override
