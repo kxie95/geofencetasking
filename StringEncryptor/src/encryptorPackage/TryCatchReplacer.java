@@ -7,6 +7,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Stack;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -17,6 +18,7 @@ public class TryCatchReplacer {
 	private static final Pattern elseStatement = Pattern.compile("\\}\\ ?else\\ ?\\{");
 	private static final Pattern closeBracketPattern = Pattern.compile("\\}");
 	private static final Pattern catchStatementPattern = Pattern.compile("\\}\\ ?catch(\\ ?.*)\\ ?\\{");
+	private static final Pattern forLoopPattern = Pattern.compile("for\\ ?(.*)\\ ?\\{");
 	private static int closingBracketCount = 0;
 	private static int exceptionCount = 0;
 	private static FileReader fr;
@@ -76,11 +78,10 @@ public class TryCatchReplacer {
 	private static StringBuilder buildTryCatch(String rootIfStatement) {
 		StringBuilder builder = new StringBuilder();
 		try {
-			// check if this call to buildTryCatch is an else statement. This
-			// affects what we
-			// do when the closing bracket is reached
+			int forLoopCount = 0;
+			int catchCount = 0;
+			Stack<Boolean> closeCatchFirst = new Stack<Boolean>();
 			boolean elseStatementPassed = false;
-			boolean hasCatchStatement = false;
 			builder.append("try {\n");
 			builder.append(rootIfStatement + "\n");
 			String currentLine = "";
@@ -91,10 +92,17 @@ public class TryCatchReplacer {
 				Matcher elseMatcher = elseStatement.matcher(trimmedLine);
 				Matcher closeBracketMatcher = closeBracketPattern.matcher(trimmedLine);
 				Matcher catchMatcher = catchStatementPattern.matcher(trimmedLine);
+				Matcher forLoopMatcher = forLoopPattern.matcher(trimmedLine);
 				// if the line is a legitimate catch statement make sure an
 				// extra end bracket is used
 				if (catchMatcher.matches()) {
-					hasCatchStatement = true;
+					catchCount++;
+					closeCatchFirst.push(true);
+				}
+				// if line is a for loop, increment for loop counter to ensure correct closing brackets are used
+				else if (forLoopMatcher.matches()) {
+					forLoopCount++;
+					closeCatchFirst.push(false);
 				}
 				// if nested if statement, buildTryCatch from nested statement
 				if (nestedIfStatementMatcher.matches()) {
@@ -120,9 +128,19 @@ public class TryCatchReplacer {
 					// and break out of loop
 					// as the main if statement has completed
 				} else if (closeBracketMatcher.matches()) {
+					//continue if there are unresolved brackets up until this line
+					boolean shouldContinue = forLoopCount > 0 || catchCount > 1;
+					// if there is an unclosed for loop, only use the closed bracket for that loop
+					if (forLoopCount > 0 && !closeCatchFirst.peek()) {
+						closeCatchFirst.pop();
+						forLoopCount--;
+						builder.append("}\n");
+					}
 					// append an extra close bracket if there is a catch
 					// statement in this if block
-					if (hasCatchStatement) {
+					else if (catchCount > 0 && closeCatchFirst.peek()) {
+						closeCatchFirst.pop();
+						catchCount--;
 						builder.append("}\n");
 						// create catch statement but don't increment bracket
 						// count since the catch already
@@ -130,9 +148,14 @@ public class TryCatchReplacer {
 						builder.append(createNewCatchStatement());
 						// skip create new catch statement if this is the else
 						// statement.
-					} else if (!elseStatementPassed) {
+					}
+					else if (!elseStatementPassed) {
 						builder.append(createNewCatchStatement());
 						closingBracketCount++;
+					}
+					
+					if (shouldContinue) {
+						continue;
 					}
 					break;
 				} else {
