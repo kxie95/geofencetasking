@@ -32,7 +32,6 @@ public class GeofenceIntentService extends IntentService {
     public void onCreate() {
         super.onCreate();
         mTaskHelper = new TaskHelper(this);
-        Log.d(TAG, "GeofenceIntentService has been created.");
     }
 
     /**
@@ -53,7 +52,6 @@ public class GeofenceIntentService extends IntentService {
 
     @Override
     protected void onHandleIntent(Intent intent) {
-        Log.d(TAG, "OnHandleIntent called.");
 
         GeofencingEvent geofencingEvent = GeofencingEvent.fromIntent(intent);
         if (geofencingEvent.hasError()) {
