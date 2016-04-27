@@ -19,6 +19,7 @@ public class TryCatchReplacer {
 	private static final Pattern closeBracketPattern = Pattern.compile("\\}");
 	private static final Pattern catchStatementPattern = Pattern.compile("\\}\\ ?catch(\\ ?.*)\\ ?\\{");
 	private static final Pattern forLoopPattern = Pattern.compile("for\\ ?(.*)\\ ?\\{");
+	private static final Pattern switchPattern = Pattern.compile("switch\\ ?(.*)\\ ?\\{");
 	private static int closingBracketCount = 0;
 	private static int exceptionCount = 0;
 	private static FileReader fr;
@@ -78,7 +79,7 @@ public class TryCatchReplacer {
 	private static StringBuilder buildTryCatch(String rootIfStatement) {
 		StringBuilder builder = new StringBuilder();
 		try {
-			int forLoopCount = 0;
+			int forLoopAndSwitchCount = 0;
 			int catchCount = 0;
 			Stack<Boolean> closeCatchFirst = new Stack<Boolean>();
 			boolean elseStatementPassed = false;
@@ -93,6 +94,7 @@ public class TryCatchReplacer {
 				Matcher closeBracketMatcher = closeBracketPattern.matcher(trimmedLine);
 				Matcher catchMatcher = catchStatementPattern.matcher(trimmedLine);
 				Matcher forLoopMatcher = forLoopPattern.matcher(trimmedLine);
+				Matcher switchMatcher = switchPattern.matcher(trimmedLine);
 				// if the line is a legitimate catch statement make sure an
 				// extra end bracket is used
 				if (catchMatcher.matches()) {
@@ -100,8 +102,8 @@ public class TryCatchReplacer {
 					closeCatchFirst.push(true);
 				}
 				// if line is a for loop, increment for loop counter to ensure correct closing brackets are used
-				else if (forLoopMatcher.matches()) {
-					forLoopCount++;
+				else if (forLoopMatcher.matches() || switchMatcher.matches()) {
+					forLoopAndSwitchCount++;
 					closeCatchFirst.push(false);
 				}
 				// if nested if statement, buildTryCatch from nested statement
@@ -129,11 +131,11 @@ public class TryCatchReplacer {
 					// as the main if statement has completed
 				} else if (closeBracketMatcher.matches()) {
 					//continue if there are unresolved brackets up until this line
-					boolean shouldContinue = forLoopCount > 0 || catchCount > 1;
+					boolean shouldContinue = forLoopAndSwitchCount > 0 || catchCount > 1;
 					// if there is an unclosed for loop, only use the closed bracket for that loop
-					if (forLoopCount > 0 && !closeCatchFirst.peek()) {
+					if (forLoopAndSwitchCount > 0 && !closeCatchFirst.peek()) {
 						closeCatchFirst.pop();
-						forLoopCount--;
+						forLoopAndSwitchCount--;
 						builder.append("}\n");
 					}
 					// append an extra close bracket if there is a catch
