@@ -177,8 +177,11 @@ class ObfuscatorWorker extends SwingWorker<Void, String> {
 			ClassRenamer.renameClassesInXML(destDir.getAbsolutePath());
 			
 			ObfuscationCoordinator.Obfuscate(destDir.getAbsolutePath() + "\\app\\src\\main");
-			ArgumentObfuscator.ObfuscateArguments(destDir.getAbsolutePath() + "\\app\\src\\main\\java");
+			
+			//This obfuscation only works with our project. Uncomment this if obfuscating our app.
+			//ArgumentObfuscator.ObfuscateArguments(destDir.getAbsolutePath() + "\\app\\src\\main\\java");
 
+			ProGuardEnabler.setMinifyEnabledToTrue(destDir.getAbsolutePath() + "\\app\\build.gradle");
 		} catch (Exception e) {
 			errorFlag = true;
 		}
